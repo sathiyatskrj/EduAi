@@ -1,0 +1,135 @@
+"use client";
+import { useState } from "react";
+
+export default function LessonPlanner() {
+  const [form, setForm] = useState({ cls: "VII", subject: "Mathematics", lesson: "", topic: "", duration: "40", medium: "English", difficulty: "Standard", instructions: "" });
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const generate = async () => {
+    setLoading(true);
+    setStep(2);
+    try {
+      const systemPrompt = `You are EduAI, an expert Indian school teacher assistant. Generate detailed lesson plans in structured format for CBSE/State Board schools. Use markdown with proper headings, tables, and numbered lists. Include all sections: Preliminary Info, Instructional Objectives (SIOs), Previous Knowledge, Teaching Aids, Entry Behaviour, Announcement of Topic, Teaching Steps table (Teaching Point | Learning Experience | Behavioural Objective | Teaching Aid | Evaluation), Blackboard Work, Evaluation Questions, Homework, and Summary.`;
+      const prompt = `Generate a complete lesson plan:\n- Class: ${form.cls}\n- Subject: ${form.subject}\n- Lesson/Chapter: ${form.lesson}\n- Topic: ${form.topic}\n- Duration: ${form.duration} minutes\n- Teaching Medium: ${form.medium}\n- Difficulty: ${form.difficulty}\n${form.instructions ? `- Special Instructions: ${form.instructions}` : ""}\n\nProvide a comprehensive, detailed lesson plan in the exact B.Ed notebook format.`;
+      
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, systemPrompt }),
+      });
+      const data = await res.json();
+      setResult(data.result || data.error || "Error generating lesson plan.");
+    } catch (err) {
+      setResult("Error: " + err.message);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>📚 AI Lesson Plan Generator</h1>
+        <p style={{ color: "var(--text-secondary)" }}>Generate complete NCERT-aligned lesson plans in 60 seconds.</p>
+      </div>
+
+      {/* Progress Steps */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 32 }}>
+        {["Configure", "Generated Plan"].map((s, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, background: step > i ? "var(--gradient-1)" : "var(--bg-card)", color: step > i ? "white" : "var(--text-secondary)", border: step > i ? "none" : "1px solid var(--border)" }}>{i + 1}</div>
+            <span style={{ fontSize: 14, fontWeight: step === i + 1 ? 600 : 400, color: step === i + 1 ? "var(--text-primary)" : "var(--text-secondary)" }}>{s}</span>
+            {i < 1 && <span style={{ color: "var(--text-secondary)", margin: "0 8px" }}>→</span>}
+          </div>
+        ))}
+      </div>
+
+      {step === 1 && (
+        <div className="card" style={{ maxWidth: 700 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Lesson Configuration</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Class</label>
+              <select name="cls" value={form.cls} onChange={handleChange} className="input-field">
+                {["VI", "VII", "VIII", "IX", "X", "XI", "XII"].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Subject</label>
+              <select name="subject" value={form.subject} onChange={handleChange} className="input-field">
+                {["Mathematics", "Science", "Social Studies", "English", "Hindi", "Kannada", "Physics", "Chemistry", "Biology"].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Lesson / Chapter Name</label>
+              <input name="lesson" value={form.lesson} onChange={handleChange} className="input-field" placeholder="e.g., Algebraic Expressions" />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Specific Topic</label>
+              <input name="topic" value={form.topic} onChange={handleChange} className="input-field" placeholder="e.g., Addition and Subtraction of Algebraic Expressions" />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Duration (min)</label>
+              <select name="duration" value={form.duration} onChange={handleChange} className="input-field">
+                {["30", "35", "40", "45"].map(d => <option key={d} value={d}>{d} minutes</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Teaching Medium</label>
+              <select name="medium" value={form.medium} onChange={handleChange} className="input-field">
+                {["English", "Hindi", "Kannada", "Tamil"].map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Difficulty Level</label>
+              <div style={{ display: "flex", gap: 12 }}>
+                {["Basic", "Standard", "Advanced"].map(d => (
+                  <button key={d} onClick={() => setForm({ ...form, difficulty: d })} style={{ flex: 1, padding: "12px", borderRadius: 10, border: form.difficulty === d ? "2px solid var(--primary)" : "1px solid var(--border)", background: form.difficulty === d ? "rgba(0,150,136,0.1)" : "transparent", color: form.difficulty === d ? "var(--primary)" : "var(--text-secondary)", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>{d}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Special Instructions (optional)</label>
+              <textarea name="instructions" value={form.instructions} onChange={handleChange} className="input-field" placeholder="Any custom requirements..." rows={3} />
+            </div>
+          </div>
+          <button className="btn-primary" onClick={generate} disabled={!form.lesson || !form.topic} style={{ marginTop: 24, width: "100%", justifyContent: "center", opacity: !form.lesson || !form.topic ? 0.5 : 1 }}>
+            ✨ Generate Lesson Plan with AI
+          </button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div>
+          <button className="btn-secondary" onClick={() => { setStep(1); setResult(""); }} style={{ marginBottom: 20, padding: "8px 20px", fontSize: 13 }}>← Back to Config</button>
+          <div className="card">
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 60 }}>
+                <div className="animate-float" style={{ fontSize: 48, marginBottom: 16 }}>🤖</div>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Generating your lesson plan...</div>
+                <div style={{ color: "var(--text-secondary)" }}>AI is crafting a detailed, NCERT-aligned plan</div>
+                <div style={{ marginTop: 20, display: "flex", gap: 8, justifyContent: "center" }}>
+                  {[0, 1, 2].map(i => <div key={i} className="loading-shimmer" style={{ width: "100%", height: 16, maxWidth: 300, animationDelay: `${i * 0.3}s` }} />)}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 700 }}>Generated Lesson Plan</h2>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button className="btn-secondary" style={{ padding: "8px 16px", fontSize: 13 }} onClick={() => navigator.clipboard.writeText(result)}>📋 Copy</button>
+                    <button className="btn-primary" style={{ padding: "8px 16px", fontSize: 13 }}>📄 Export PDF</button>
+                  </div>
+                </div>
+                <div className="ai-content" style={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }} dangerouslySetInnerHTML={{ __html: result.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/^### (.*$)/gm, "<h3>$1</h3>").replace(/^## (.*$)/gm, "<h2>$1</h2>").replace(/^# (.*$)/gm, "<h1>$1</h1>").replace(/^\- (.*$)/gm, "<li>$1</li>").replace(/\n/g, "<br/>") }} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
