@@ -1,11 +1,32 @@
 import { NextResponse } from "next/server";
 
-// === FREE AI PROVIDERS ===
-// 1. GROQ - Llama 3.3 70B (completely free, get key at console.groq.com)
-// 2. Google Gemini 2.0 Flash (free tier, get key at aistudio.google.com)
-
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+
+async function callOpenRouter(prompt, systemPrompt) {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "HTTP-Referer": "http://localhost:3000", // Required by OpenRouter
+      "X-Title": "EduAI",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.0-flash-lite-preview-02-05:free", // Using free model on OpenRouter
+      messages: [
+        ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 8000,
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenRouter error: ${await res.text()}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "No response.";
+}
 
 async function callGroq(prompt, systemPrompt) {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -44,17 +65,17 @@ async function callGemini(prompt, systemPrompt) {
 export async function POST(request) {
   try {
     const { prompt, systemPrompt } = await request.json();
-
     let result;
 
-    // Priority: Groq (Llama 3) first (faster & free), then Gemini as fallback
-    if (GROQ_API_KEY) {
+    if (OPENROUTER_API_KEY) {
+      result = await callOpenRouter(prompt, systemPrompt);
+    } else if (GROQ_API_KEY) {
       result = await callGroq(prompt, systemPrompt);
     } else if (GEMINI_API_KEY) {
       result = await callGemini(prompt, systemPrompt);
     } else {
       return NextResponse.json({ 
-        error: "No API key configured. Get a FREE key:\n• Groq (Llama 3): https://console.groq.com\n• Gemini: https://aistudio.google.com\n\nAdd to .env.local as GROQ_API_KEY or GEMINI_API_KEY" 
+        error: "No API key configured." 
       }, { status: 500 });
     }
 

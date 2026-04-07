@@ -1,8 +1,16 @@
 import 'dart:ui';
+import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:http/http.dart' as http;
+
+// API Configuration
+// Using 10.0.2.2 which is localhost alias for Android Emulator
+// Change to your machine's local IP if testing on a real device.
+const String API_URL = "http://10.0.2.2:3000/api/ai";
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
@@ -58,7 +66,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // Needed for transparent/blur bottom nav
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -125,11 +133,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: TextStyle(
-                  color: const Color(0xFF00BCD4),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: Color(0xFF00BCD4), fontWeight: FontWeight.bold, fontSize: 14),
               ).animate().fadeIn().slideX(begin: 0.2),
             ]
           ],
@@ -175,10 +179,7 @@ class HomeTab extends StatelessWidget {
             ),
           ).animate().fadeIn(duration: 500.ms),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
-              onPressed: () {},
-            ),
+            IconButton(icon: const Icon(Icons.notifications_none_rounded, color: Colors.white), onPressed: () {}),
             const SizedBox(width: 8),
             const CircleAvatar(
               radius: 16,
@@ -193,19 +194,14 @@ class HomeTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Good Morning! 👋",
-                  style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white),
-                ).animate().slideX(begin: -0.1, duration: 400.ms).fadeIn(),
+                Text("Good Morning! 👋", style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white))
+                    .animate().slideX(begin: -0.1, duration: 400.ms).fadeIn(),
                 const SizedBox(height: 8),
-                Text(
-                  "Here is your classroom intelligence overview.",
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
-                ).animate().slideX(begin: -0.1, duration: 400.ms, delay: 100.ms).fadeIn(),
+                Text("Here is your classroom intelligence overview.", style: TextStyle(color: Colors.grey.shade400, fontSize: 15))
+                    .animate().slideX(begin: -0.1, duration: 400.ms, delay: 100.ms).fadeIn(),
                 
                 const SizedBox(height: 32),
                 
-                // Stat Grid
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
@@ -222,23 +218,22 @@ class HomeTab extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 36),
-                Text("🔥 Critical Insights", style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold))
-                    .animate().fadeIn(delay: 400.ms),
+                Text("🔥 Critical Insights", style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)).animate().fadeIn(delay: 400.ms),
                 const SizedBox(height: 16),
                 
                 const PremiumAlertCard(
                   title: "Action Required",
-                  message: "Ravi Kumar scored below 40% in 3 tests. Remedial is highly recommended.",
+                  message: "Ravi Kumar scored below 40% in 3 tests. Remedial recommended.",
                   type: "danger",
                 ).animate().slideX(begin: 0.1, delay: 500.ms).fadeIn(),
                 
                 const PremiumAlertCard(
                   title: "Trend Alert",
-                  message: "VII-A class average dropped by 8% in last test — concept: Algebraic Expressions.",
+                  message: "VII-A class average dropped by 8% in last test.",
                   type: "warning",
                 ).animate().slideX(begin: 0.1, delay: 600.ms).fadeIn(),
                 
-                const SizedBox(height: 120), // Bottom padding
+                const SizedBox(height: 120),
               ],
             ),
           ),
@@ -264,13 +259,7 @@ class PremiumStatCard extends StatelessWidget {
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
+        boxShadow: [BoxShadow(color: color.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -316,13 +305,6 @@ class PremiumAlertCard extends StatelessWidget {
         color: color.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          )
-        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,10 +332,64 @@ class PremiumAlertCard extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// UI: LESSON PLANNER TAB
+// UI: LESSON PLANNER TAB (WITH AI API INTEGRATION)
 // -----------------------------------------------------------------------------
-class LessonPlannerTab extends StatelessWidget {
+class LessonPlannerTab extends StatefulWidget {
   const LessonPlannerTab({Key? key}) : super(key: key);
+
+  @override
+  State<LessonPlannerTab> createState() => _LessonPlannerTabState();
+}
+
+class _LessonPlannerTabState extends State<LessonPlannerTab> {
+  final _classController = TextEditingController();
+  final _subjectController = TextEditingController();
+  final _topicController = TextEditingController();
+  
+  bool _isLoading = false;
+  String _generatedContent = "";
+  
+  Future<void> _generatePlan() async {
+    if (_classController.text.isEmpty || _topicController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill in Class and Topic")));
+      return;
+    }
+    
+    setState(() {
+      _isLoading = true;
+      _generatedContent = "";
+    });
+
+    try {
+      final prompt = "Generate a complete lesson plan:\n- Class: ${_classController.text}\n- Subject: ${_subjectController.text}\n- Topic: ${_topicController.text}\n\nProvide a comprehensive, detailed lesson plan in the exact B.Ed notebook format.";
+      final systemPrompt = "You are EduAI, an expert Indian school teacher assistant. Generate detailed lesson plans in structured format.";
+
+      final response = await http.post(
+        Uri.parse(API_URL),
+        headers: { "Content-Type": "application/json" },
+        body: jsonEncode({"prompt": prompt, "systemPrompt": systemPrompt}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _generatedContent = data['result'] ?? "No result generated.";
+        });
+      } else {
+        setState(() {
+          _generatedContent = "API Error (${response.statusCode}): Make sure your Next.js server is running and .env.local is configured.";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _generatedContent = "Network Error: Could not reach the API.\nDetailed info: $e\n\nPlease ensure the Next.js app is running on port 3000.";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -372,6 +408,7 @@ class LessonPlannerTab extends StatelessWidget {
             Text("Generate NCERT-aligned plans in seconds.", style: TextStyle(color: Colors.grey.shade400, fontSize: 15))
                 .animate().fadeIn(delay: 100.ms),
             const SizedBox(height: 32),
+            
             Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
@@ -381,17 +418,17 @@ class LessonPlannerTab extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  _buildInput("Class (e.g., VII)"),
+                  _buildInput("Class (e.g., VII)", _classController),
                   const SizedBox(height: 20),
-                  _buildInput("Subject"),
+                  _buildInput("Subject", _subjectController),
                   const SizedBox(height: 20),
-                  _buildInput("Topic"),
+                  _buildInput("Topic", _topicController),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _isLoading ? null : _generatePlan,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         padding: EdgeInsets.zero,
@@ -404,7 +441,9 @@ class LessonPlannerTab extends StatelessWidget {
                         ),
                         child: Container(
                           alignment: Alignment.center,
-                          child: const Text('✨ Generate Magic Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: _isLoading 
+                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Text('✨ Generate Magic Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ),
                     ),
@@ -412,14 +451,40 @@ class LessonPlannerTab extends StatelessWidget {
                 ],
               ),
             ).animate().slideY(begin: 0.1, duration: 500.ms).fadeIn(),
+            
+            if (_generatedContent.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Result", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF00BCD4))),
+                    const SizedBox(height: 16),
+                    Text(
+                      _generatedContent,
+                      style: const TextStyle(fontSize: 15, color: Colors.white70, height: 1.5),
+                    )
+                  ],
+                ),
+              ).animate().fadeIn().slideY(begin: 0.1),
+              const SizedBox(height: 120),
+            ]
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInput(String hint) {
+  Widget _buildInput(String hint, TextEditingController controller) {
     return TextField(
+      controller: controller,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: hint,
@@ -434,17 +499,64 @@ class LessonPlannerTab extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// UI: STATS TAB
+// UI: STATS TAB (WITH DYNAMIC CALCULATION)
 // -----------------------------------------------------------------------------
-class StatsTab extends StatelessWidget {
+class StatsTab extends StatefulWidget {
   const StatsTab({Key? key}) : super(key: key);
 
   @override
+  State<StatsTab> createState() => _StatsTabState();
+}
+
+class _StatsTabState extends State<StatsTab> {
+  List<double> marks = [42, 38, 45, 29, 31, 48, 12, 35, 33, 40];
+  final _scoreController = TextEditingController();
+
+  Map<String, String> get calculations {
+    if (marks.isEmpty) return {"mean": "0", "sd": "0", "max": "0", "cv": "0%"};
+    
+    // Mean
+    double sum = marks.reduce((a, b) => a + b);
+    double mean = sum / marks.length;
+    
+    // Max
+    double maxScore = marks.reduce(max);
+    
+    // Standard Deviation
+    double variance = marks.map((m) => pow(m - mean, 2)).reduce((a, b) => a + b) / marks.length;
+    double sd = sqrt(variance);
+    
+    // Coeff of Variation
+    double cv = (sd / mean) * 100;
+    
+    return {
+      "mean": mean.toStringAsFixed(1),
+      "sd": sd.toStringAsFixed(1),
+      "max": maxScore.toStringAsFixed(0),
+      "cv": cv.toStringAsFixed(1) + "%",
+    };
+  }
+
+  void _addScore() {
+    if (_scoreController.text.isNotEmpty) {
+      double? val = double.tryParse(_scoreController.text);
+      if (val != null) {
+        setState(() {
+          marks.add(val);
+          _scoreController.clear();
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final stats = calculations;
+    
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text("Class Statistics", style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 22)),
+        title: Text("Dynamic Statistics", style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 22)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -461,17 +573,19 @@ class StatsTab extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildStatRow("Mean (x̄)", "34.2", "Σx/N"),
+                  _buildStatRow("Mean (x̄)", stats["mean"]!, "Σx/N"),
                   const Divider(color: Colors.white12, height: 32),
-                  _buildStatRow("Standard Deviation (σ)", "8.4", "√(Σ(x-x̄)²/N)"),
+                  _buildStatRow("Standard Deviation (σ)", stats["sd"]!, "√(Σ(x-x̄)²/N)"),
                   const Divider(color: Colors.white12, height: 32),
-                  _buildStatRow("Highest Score", "48", "Max"),
+                  _buildStatRow("Highest Score", stats["max"]!, "Max"),
                   const Divider(color: Colors.white12, height: 32),
-                  _buildStatRow("Coeff. of Variation", "24.5%", "(σ/x̄)×100"),
+                  _buildStatRow("Coeff. of Variation", stats["cv"]!, "(σ/x̄)×100"),
                 ],
               ),
             ).animate().slideX(begin: 0.1, duration: 500.ms).fadeIn(),
+            
             const SizedBox(height: 32),
+            
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -483,22 +597,51 @@ class StatsTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Export Options", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text("Scores List (n=${marks.length})", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
-                    label: const Text("Export B.Ed Report"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444),
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _scoreController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: "Enter score...",
+                            filled: true,
+                            fillColor: const Color(0xFF0F172A),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF009688), Color(0xFF00BCD4)]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.add, color: Colors.white),
+                          onPressed: _addScore,
+                        ),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: marks.map((m) => Chip(
+                      label: Text(m.toStringAsFixed(0)),
+                      backgroundColor: const Color(0xFF0F172A),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () => setState(() => marks.remove(m)),
+                    )).toList(),
                   )
                 ],
               ),
             ).animate().slideX(begin: -0.1, duration: 600.ms).fadeIn(),
+            
+            const SizedBox(height: 100),
           ],
         ),
       ),
