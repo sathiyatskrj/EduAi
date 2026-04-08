@@ -19,6 +19,15 @@
   --gradient-3: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
   --gradient-4: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
   --shadow-glow: 0 0 30px rgba(0, 150, 136, 0.15);
+
+  /* P1 UI/UX: Typography Scale */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-stat: 36px;
 }
 
 * {
@@ -67,6 +76,14 @@ body {
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 .animate-float { animation: float 6s ease-in-out infinite; }
 
+/* Staggered entry classes */
+.stagger-1 { animation-delay: 50ms; opacity: 0; }
+.stagger-2 { animation-delay: 100ms; opacity: 0; }
+.stagger-3 { animation-delay: 150ms; opacity: 0; }
+.stagger-4 { animation-delay: 200ms; opacity: 0; }
+.stagger-5 { animation-delay: 250ms; opacity: 0; }
+.stagger-6 { animation-delay: 300ms; opacity: 0; }
+
 .glass {
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(12px);
@@ -103,7 +120,6 @@ body {
   align-items: center;
   gap: 8px;
 }
-}
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 150, 136, 0.35);
@@ -122,7 +138,6 @@ body {
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-}
 }
 .btn-secondary:hover:not(:disabled) {
   background: rgba(0, 150, 136, 0.1);
@@ -227,6 +242,14 @@ textarea.input-field {
   color: var(--primary);
   background: rgba(0, 150, 136, 0.08);
   border-left-color: var(--primary);
+}
+
+.icon-wrap {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; font-size: 20px;
+  background: rgba(0, 150, 136, 0.1);
+  color: var(--primary);
 }
 
 .main-content {

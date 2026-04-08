@@ -48,26 +48,26 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 32 }}>
+      <div className="stagger-1" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 32 }}>
         {STATS.map((s, i) => (
-          <div key={i} className="card" style={{ animationDelay: `${i * 0.1}s` }}>
+          <div key={i} className="card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <span style={{ fontSize: 32 }}>{s.icon}</span>
-              <span className="badge badge-success" style={{ fontSize: 11 }}>{s.change}</span>
+              <div className="icon-wrap">{s.icon}</div>
+              <span className="badge badge-success" style={{ fontSize: "var(--text-xs)" }}>{s.change}</span>
             </div>
-            <div className="stat-number">{s.value}</div>
-            <div style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 4 }}>{s.label}</div>
+            <div className="stat-number" style={{ fontSize: "var(--text-stat)" }}>{s.value}</div>
+            <div style={{ color: "var(--text-secondary)", fontSize: "var(--text-sm)", marginTop: 4 }}>{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, marginBottom: 32 }}>
+      <div className="stagger-2" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, marginBottom: 32 }}>
         {ACTIONS.map((a, i) => (
           <Link key={i} href={a.href} style={{ textDecoration: "none" }}>
-            <div className="card" style={{ textAlign: "center", cursor: "pointer", padding: 20 }}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>{a.icon}</div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)" }}>{a.label}</div>
+            <div className="card" style={{ textAlign: "center", cursor: "pointer", padding: 20, display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div className="icon-wrap" style={{ marginBottom: 12 }}>{a.icon}</div>
+              <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--text-primary)" }}>{a.label}</div>
             </div>
           </Link>
         ))}
@@ -75,9 +75,10 @@ export default function Dashboard() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 32 }}>
         {/* Today's Schedule */}
-        <div className="card">
+        <div className="card stagger-3">
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-            📅 Today&apos;s Schedule
+            <div className="icon-wrap" style={{ width: 32, height: 32, fontSize: 16 }}>📅</div>
+            Today&apos;s Schedule
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {SCHEDULE.map((item, i) => (
@@ -92,21 +93,22 @@ export default function Dashboard() {
                   boxShadow: item.status === "current" ? "0 0 10px rgba(0,150,136,0.5)" : "none",
                 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{item.period} — {item.cls} {item.subject}</div>
-                  <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>{item.topic}</div>
+                  <div style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>{item.period} — {item.cls} {item.subject}</div>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)" }}>{item.topic}</div>
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>{item.time}</div>
-                {item.status === "current" && <span className="badge badge-info">LIVE</span>}
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontWeight: 500 }}>{item.time}</div>
+                {item.status === "current" && <span className="badge badge-info" style={{ fontSize: "var(--text-xs)" }}>LIVE</span>}
               </div>
             ))}
           </div>
         </div>
 
         {/* SCAMPER: Modify — Priority-Scored Alerts */}
-        <div className="card">
+        <div className="card stagger-4">
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-            🔔 Prioritized Alerts
-            <span className="badge badge-danger" style={{ fontSize: 11 }}>{ALERTS.length}</span>
+            <div className="icon-wrap" style={{ width: 32, height: 32, fontSize: 16 }}>🔔</div>
+            Prioritized Alerts
+            <span className="badge badge-danger" style={{ fontSize: "var(--text-xs)" }}>{ALERTS.length}</span>
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {ALERTS.map((a, i) => {
@@ -125,15 +127,15 @@ export default function Dashboard() {
                       <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>Priority: {a.priority}/100</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: 14, marginBottom: 10, lineHeight: 1.5 }}>{a.msg}</div>
+                  <div style={{ fontSize: "var(--text-base)", marginBottom: 10, lineHeight: 1.5 }}>{a.msg}</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <Link href={a.href}>
-                      <button className="btn-secondary" style={{ padding: "6px 14px", fontSize: 12 }}>{a.action} →</button>
+                      <button className="btn-secondary" style={{ padding: "6px 14px", fontSize: "var(--text-sm)" }}>{a.action} →</button>
                     </Link>
                     {/* Feature 8: 1-Click WhatsApp Parent Alert */}
                     <button
                       className="btn-secondary"
-                      style={{ padding: "6px 14px", fontSize: 12, color: "#25D366", borderColor: "#25D366" }}
+                      style={{ padding: "6px 14px", fontSize: "var(--text-sm)", color: "#25D366", borderColor: "#25D366" }}
                       onClick={() => {
                         const msg = encodeURIComponent(`Dear Parent,\n\n⚠️ EduAI Alert:\n${a.msg}\n\nPlease ensure your child receives extra practice at home.\n\n— Sent via EduAI`);
                         window.open(`https://wa.me/?text=${msg}`, "_blank");

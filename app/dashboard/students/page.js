@@ -83,12 +83,12 @@ export default function Students() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
         {filtered.map((s, i) => (
-          <div key={i} className="card" style={{ display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
+          <div key={i} className={`card stagger-${(i % 5) + 1}`} style={{ display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
             {/* Auto-Remedial Generating Overlay */}
             {remedialDialog === s.id && (
               <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.92)", borderRadius: 16, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
-                <div className="animate-float" style={{ fontSize: 40, marginBottom: 12 }}>🧠</div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Generating Remedial...</div>
+                <div className="icon-wrap animate-pulse-glow" style={{ fontSize: 32, width: 64, height: 64, marginBottom: 12 }}>🧠</div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: "var(--text-primary)" }}>Generating Remedial...</div>
                 <div className="loading-shimmer" style={{ width: "60%", height: 6, borderRadius: 4, marginTop: 12 }}></div>
               </div>
             )}
@@ -100,7 +100,7 @@ export default function Students() {
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 16 }}>{s.name}</div>
-                  <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>{s.id} • {s.cls}</div>
+                  <div style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>{s.id} • {s.cls}</div>
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -152,6 +152,15 @@ export default function Students() {
           </div>
         ))}
       </div>
+
+      {filtered.length === 0 && (
+        <div className="card animate-fade-in" style={{ textAlign: "center", padding: "60px 20px" }}>
+          <div className="icon-wrap" style={{ width: 80, height: 80, fontSize: 36, margin: "0 auto 20px" }}>🕵️‍♂️</div>
+          <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>No students found</h3>
+          <p style={{ color: "var(--text-secondary)" }}>We couldn&apos;t find any students matching &quot;{search}&quot;. Try adjusting your search.</p>
+          <button className="btn-secondary" onClick={() => setSearch("")} style={{ marginTop: 20 }}>Clear Search</button>
+        </div>
+      )}
     </div>
   );
 }

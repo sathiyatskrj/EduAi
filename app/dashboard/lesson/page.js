@@ -192,12 +192,34 @@ export default function LessonPlanner() {
           <button className="btn-secondary" onClick={() => { setStep(1); setResult(""); }} style={{ marginBottom: 20, padding: "8px 20px", fontSize: 13 }}>← Back to Config</button>
           <div className="card">
             {loading ? (
-              <div style={{ textAlign: "center", padding: 60 }}>
-                <div className="animate-float" style={{ fontSize: 48, marginBottom: 16 }}>🤖</div>
-                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Generating your lesson plan...</div>
-                <div style={{ color: "var(--text-secondary)" }}>AI is crafting a detailed, NCERT-aligned plan</div>
-                <div style={{ marginTop: 20, display: "flex", gap: 8, justifyContent: "center" }}>
-                  {[0, 1, 2].map(i => <div key={i} className="loading-shimmer" style={{ width: "100%", height: 16, maxWidth: 300, animationDelay: `${i * 0.3}s` }} />)}
+              <div style={{ padding: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
+                  <div className="icon-wrap animate-pulse-glow" style={{ fontSize: 24, width: 48, height: 48 }}>🤖</div>
+                  <div>
+                    <div style={{ fontSize: 18, fontWeight: 700 }}>AI is drafting your lesson...</div>
+                    <div style={{ color: "var(--text-secondary)", fontSize: "var(--text-sm)" }}>Analyzing curriculum & aligning with NCERT standards</div>
+                  </div>
+                </div>
+                
+                {/* Skeleton Structure matching actual lesson plan layout */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 24, opacity: 0.7 }}>
+                  <div>
+                    <div className="loading-shimmer" style={{ width: "40%", height: 24, marginBottom: 12, borderRadius: 6 }}></div>
+                    <div className="loading-shimmer" style={{ width: "100%", height: 12, marginBottom: 8, borderRadius: 4 }}></div>
+                    <div className="loading-shimmer" style={{ width: "85%", height: 12, marginBottom: 8, borderRadius: 4 }}></div>
+                  </div>
+                  <div>
+                    <div className="loading-shimmer" style={{ width: "25%", height: 20, marginBottom: 12, borderRadius: 6 }}></div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                      <div className="loading-shimmer" style={{ width: "100%", height: 40, borderRadius: 8 }}></div>
+                      <div className="loading-shimmer" style={{ width: "100%", height: 40, borderRadius: 8 }}></div>
+                      <div className="loading-shimmer" style={{ width: "100%", height: 40, borderRadius: 8 }}></div>
+                    </div>
+                  </div>
+                  <div>
+                     <div className="loading-shimmer" style={{ width: "30%", height: 20, marginBottom: 12, borderRadius: 6 }}></div>
+                     <div className="loading-shimmer" style={{ width: "100%", height: 80, borderRadius: 8 }}></div>
+                  </div>
                 </div>
               </div>
             ) : (
