@@ -126,9 +126,22 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div style={{ fontSize: 14, marginBottom: 10, lineHeight: 1.5 }}>{a.msg}</div>
-                  <Link href={a.href}>
-                    <button className="btn-secondary" style={{ padding: "6px 14px", fontSize: 12 }}>{a.action} →</button>
-                  </Link>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Link href={a.href}>
+                      <button className="btn-secondary" style={{ padding: "6px 14px", fontSize: 12 }}>{a.action} →</button>
+                    </Link>
+                    {/* Feature 8: 1-Click WhatsApp Parent Alert */}
+                    <button
+                      className="btn-secondary"
+                      style={{ padding: "6px 14px", fontSize: 12, color: "#25D366", borderColor: "#25D366" }}
+                      onClick={() => {
+                        const msg = encodeURIComponent(`Dear Parent,\n\n⚠️ EduAI Alert:\n${a.msg}\n\nPlease ensure your child receives extra practice at home.\n\n— Sent via EduAI`);
+                        window.open(`https://wa.me/?text=${msg}`, "_blank");
+                      }}
+                    >
+                      💬 Notify Parent
+                    </button>
+                  </div>
                 </div>
               );
             })}

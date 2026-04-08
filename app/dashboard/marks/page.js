@@ -7,6 +7,35 @@ export default function MarksEntry() {
   const [cls, setCls] = useState("VII-A");
   const [subject, setSubject] = useState("Mathematics");
   const [submitted, setSubmitted] = useState(false);
+  const [voiceActive, setVoiceActive] = useState(false);
+  const [voiceText, setVoiceText] = useState("");
+
+  // Feature 11: Voice Marks Entry using Web Speech API
+  const startVoice = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert("Voice input not supported in this browser. Try Chrome.");
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-IN";
+    setVoiceActive(true);
+    setVoiceText("");
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setVoiceText(transcript);
+    };
+    recognition.onerror = () => setVoiceActive(false);
+    recognition.onend = () => setVoiceActive(false);
+    recognition.start();
+    // Auto-stop after 30 seconds
+    setTimeout(() => { try { recognition.stop(); } catch(e) {} }, 30000);
+  };
   
   const STUDENTS = [
     { id: 1, name: "Aarav Sharma", roll: "01" },
@@ -101,6 +130,41 @@ export default function MarksEntry() {
             <input type="number" className="input-field" defaultValue={50} />
           </div>
         </div>
+      </div>
+
+      {/* Feature 11: Voice Marks Entry Panel */}
+      <div className="card" style={{ marginBottom: 24, background: voiceActive ? "rgba(0,150,136,0.06)" : "var(--bg-card)", border: voiceActive ? "1px solid rgba(0,150,136,0.3)" : "1px solid var(--border)", transition: "all 0.3s" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: voiceText ? 16 : 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              onClick={startVoice}
+              disabled={voiceActive}
+              style={{
+                width: 44, height: 44, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: voiceActive ? "var(--danger)" : "var(--gradient-1)",
+                color: "white", fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: voiceActive ? "0 0 20px rgba(239,68,68,0.4)" : "0 0 20px rgba(0,150,136,0.3)",
+                animation: voiceActive ? "pulse-glow 1.5s ease-in-out infinite" : "none"
+              }}
+            >
+              🎙
+            </button>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>Voice Marks Entry</div>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                {voiceActive ? "🔴 Listening... say \"Aarav 38, Avni 42...\"" : "Click mic and speak marks aloud"}
+              </div>
+            </div>
+          </div>
+          {voiceText && (
+            <span className="badge badge-success" style={{ fontSize: 11 }}>Transcribed</span>
+          )}
+        </div>
+        {voiceText && (
+          <div style={{ padding: 16, background: "rgba(15,23,42,0.4)", borderRadius: 10, fontSize: 14, lineHeight: 1.7, color: "var(--text-primary)", fontFamily: "monospace" }}>
+            {voiceText}
+          </div>
+        )}
       </div>
 
       <div className="card">

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useApp } from "./AppContext";
 
 // SCAMPER: Eliminate — Simplified to 5 core tabs + collapsible "More"
 const CORE_NAV = [
@@ -24,6 +25,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const { mode, toggleMode } = useApp();
 
   // Auto-expand "More" if current path is inside it
   const isMoreActive = MORE_NAV.some(item => pathname === item.href);
@@ -114,6 +116,23 @@ export default function Sidebar() {
         </nav>
 
         <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border)" }}>
+          {/* TRIZ: Adaptive UI Mode Toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "10px 14px", background: "rgba(15,23,42,0.5)", borderRadius: 10 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{mode === "simple" ? "Simple" : "Pro"} Mode</div>
+              <div style={{ fontSize: 10, color: "var(--text-secondary)" }}>{mode === "simple" ? "Fewer fields" : "All controls"}</div>
+            </div>
+            <button onClick={toggleMode} style={{
+              width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", position: "relative",
+              background: mode === "pro" ? "var(--primary)" : "var(--border)", transition: "all 0.3s"
+            }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: "50%", background: "white", position: "absolute", top: 3,
+                left: mode === "pro" ? 23 : 3, transition: "left 0.3s"
+              }} />
+            </button>
+          </div>
+
           <div className="card" style={{ padding: 16, background: "rgba(0,150,136,0.06)", border: "1px solid rgba(0,150,136,0.2)" }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", marginBottom: 4 }}>Free Plan</div>
             <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>5 AI generations / day</div>

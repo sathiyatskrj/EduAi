@@ -234,6 +234,12 @@ textarea.input-field {
 .ai-content th { background: rgba(0,150,136,0.1); padding: 10px 14px; text-align: left; font-weight: 600; border: 1px solid var(--border); }
 .ai-content td { padding: 10px 14px; border: 1px solid var(--border); color: var(--text-secondary); }
 
+/* Voice Entry Pulse Glow */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(239,68,68,0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 25px rgba(239,68,68,0.6); transform: scale(1.05); }
+}
+
 @media (max-width: 1024px) {
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }

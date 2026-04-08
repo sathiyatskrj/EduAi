@@ -6,7 +6,9 @@ export default function LessonPlanner() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [sessionPack, setSessionPack] = useState(true); // SCAMPER: Combine — generate Lesson + Aids together
+  const [sessionPack, setSessionPack] = useState(true);
+  const [planMode, setPlanMode] = useState("forward"); // "forward" | "retro"
+  const [retroNotes, setRetroNotes] = useState("");
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -36,19 +38,91 @@ export default function LessonPlanner() {
         <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>📚 AI Lesson Plan Generator</h1>
         <p style={{ color: "var(--text-secondary)" }}>Generate complete NCERT-aligned lesson plans in 60 seconds.</p>
       </div>
-
-      {/* Progress Steps */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 32 }}>
-        {["Configure", "Generated Plan"].map((s, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, background: step > i ? "var(--gradient-1)" : "var(--bg-card)", color: step > i ? "white" : "var(--text-secondary)", border: step > i ? "none" : "1px solid var(--border)" }}>{i + 1}</div>
-            <span style={{ fontSize: 14, fontWeight: step === i + 1 ? 600 : 400, color: step === i + 1 ? "var(--text-primary)" : "var(--text-secondary)" }}>{s}</span>
-            {i < 1 && <span style={{ color: "var(--text-secondary)", margin: "0 8px" }}>→</span>}
-          </div>
-        ))}
+      {/* SCAMPER: Reverse — Mode Selector */}
+      <div style={{ display: "flex", gap: 10, background: "var(--bg-card)", padding: 4, borderRadius: 12, marginBottom: 24, maxWidth: 500 }}>
+        <button onClick={() => { setPlanMode("forward"); setResult(""); setStep(1); }} style={{
+          flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer",
+          background: planMode === "forward" ? "var(--primary)" : "transparent",
+          color: planMode === "forward" ? "white" : "var(--text-secondary)", transition: "all 0.2s"
+        }}>
+          📝 Forward Plan
+        </button>
+        <button onClick={() => { setPlanMode("retro"); setResult(""); setStep(1); }} style={{
+          flex: 1, padding: "10px 16px", borderRadius: 8, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer",
+          background: planMode === "retro" ? "var(--accent)" : "transparent",
+          color: planMode === "retro" ? "white" : "var(--text-secondary)", transition: "all 0.2s"
+        }}>
+          🔄 Retrospective
+        </button>
       </div>
 
-      {step === 1 && (
+      {/* Retrospective Mode */}
+      {planMode === "retro" && step === 1 && (
+        <div className="card" style={{ maxWidth: 700 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>🔄 Retrospective Lesson Plan</h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 20 }}>Already taught the class? Record what happened and AI will format it into a proper B.Ed notebook-ready lesson plan.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Class</label>
+              <select name="cls" value={form.cls} onChange={handleChange} className="input-field">
+                {["VI","VII","VIII","IX","X","XI","XII"].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Subject</label>
+              <select name="subject" value={form.subject} onChange={handleChange} className="input-field">
+                {["Mathematics","Science","Social Studies","English","Hindi"].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Topic Taught</label>
+            <input name="topic" value={form.topic} onChange={handleChange} className="input-field" placeholder="e.g., Addition of Fractions" />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>What Actually Happened? (rough notes)</label>
+            <textarea
+              value={retroNotes}
+              onChange={(e) => setRetroNotes(e.target.value)}
+              className="input-field"
+              rows={6}
+              placeholder="I started with a recap of previous class. Asked Ravi about denominators. Used pizza analogy for fractions. Drew circle diagrams on board. Students struggled with unlike denominators. Gave 5 practice problems. Assigned pg 42 as homework."
+            />
+          </div>
+          <button className="btn-primary" onClick={async () => {
+            setLoading(true); setStep(2);
+            try {
+              const res = await fetch("/api/ai", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  systemPrompt: "You are EduAI. Convert rough teaching notes into a formal B.Ed lesson plan format with all standard sections: Preliminary Info, SIOs, Previous Knowledge, Teaching Aids, Entry Behaviour, Announcement, Teaching Steps table, Blackboard Work, Evaluation, Homework, Summary.",
+                  prompt: `Convert these rough teaching notes into a formal B.Ed lesson plan:\nClass: ${form.cls}\nSubject: ${form.subject}\nTopic: ${form.topic}\n\nTeacher's Notes:\n${retroNotes}`
+                }),
+              });
+              const data = await res.json();
+              setResult(data.result || data.error);
+            } catch (err) { setResult("Error: " + err.message); }
+            setLoading(false);
+          }} disabled={!form.topic || !retroNotes} style={{ width: "100%", justifyContent: "center", opacity: !form.topic || !retroNotes ? 0.5 : 1 }}>
+            ✨ Convert to Formal Lesson Plan
+          </button>
+        </div>
+      )}
+
+      {/* Forward Planning Mode — Progress Steps */}
+      {planMode === "forward" && (
+        <div style={{ display: "flex", gap: 12, marginBottom: 32 }}>
+          {["Configure", "Generated Plan"].map((s, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, background: step > i ? "var(--gradient-1)" : "var(--bg-card)", color: step > i ? "white" : "var(--text-secondary)", border: step > i ? "none" : "1px solid var(--border)" }}>{i + 1}</div>
+              <span style={{ fontSize: 14, fontWeight: step === i + 1 ? 600 : 400, color: step === i + 1 ? "var(--text-primary)" : "var(--text-secondary)" }}>{s}</span>
+              {i < 1 && <span style={{ color: "var(--text-secondary)", margin: "0 8px" }}>→</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {planMode === "forward" && step === 1 && (
         <div className="card" style={{ maxWidth: 700 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Lesson Configuration</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
