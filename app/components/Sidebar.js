@@ -142,6 +142,20 @@ export default function Sidebar() {
           </div>
         </div>
       </aside>
+
+      {/* P0 UI/UX: Mobile Bottom Navigation */}
+      <nav className="mobile-bottom-nav">
+        {CORE_NAV.map((item) => (
+          <Link
+            key={`mobile-${item.href}`}
+            href={item.href}
+            className={`mobile-nav-item ${pathname === item.href ? "active" : ""}`}
+          >
+            <span style={{ fontSize: 22, color: pathname === item.href ? "var(--primary)" : "var(--text-secondary)" }}>{item.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: pathname === item.href ? 600 : 500 }}>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </>
   );
 }
