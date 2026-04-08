@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function MarksEntry() {
   const [method, setMethod] = useState("total");
   const [cls, setCls] = useState("VII-A");
   const [subject, setSubject] = useState("Mathematics");
+  const [submitted, setSubmitted] = useState(false);
   
   const STUDENTS = [
     { id: 1, name: "Aarav Sharma", roll: "01" },
@@ -13,13 +15,67 @@ export default function MarksEntry() {
     { id: 4, name: "Diya Reddy", roll: "04" },
     { id: 5, name: "Ishaan Kumar", roll: "05" },
     { id: 6, name: "Kavya Gupta", roll: "06" },
+    { id: 7, name: "Lakshmi Nair", roll: "07" },
+    { id: 8, name: "Mohan Rao", roll: "08" },
+    { id: 9, name: "Neha Joshi", roll: "09" },
+    { id: 10, name: "Om Prakash", roll: "10" },
+    { id: 11, name: "Priya Verma", roll: "11" },
   ];
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+  };
+
+  if (submitted) {
+    return (
+      <div className="animate-fade-in">
+        <div className="card" style={{ maxWidth: 600, margin: "0 auto", textAlign: "center", padding: "60px 40px" }}>
+          <div style={{ fontSize: 64, marginBottom: 20 }}>✅</div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Marks Submitted Successfully!</h2>
+          <p style={{ color: "var(--text-secondary)", marginBottom: 8 }}>
+            {STUDENTS.length} students • {cls} {subject} • Unit Test 1
+          </p>
+          
+          {/* SCAMPER: Combine — Unified Analyze Flow */}
+          <div style={{ background: "rgba(0,150,136,0.06)", border: "1px solid rgba(0,150,136,0.2)", borderRadius: 16, padding: 24, margin: "24px 0", textAlign: "left" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", marginBottom: 12 }}>⚡ AUTO-ANALYSIS TRIGGERED</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { icon: "📊", label: "Statistics Engine", status: "Computed", detail: "Mean, Median, SD, 10 measures" },
+                { icon: "🔍", label: "Diagnostic Engine", status: "Complete", detail: "4 weak concepts identified" },
+                { icon: "💊", label: "Remedial Plans", status: "Ready", detail: "3 students flagged for remedial" },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(15,23,42,0.4)" }}>
+                  <span style={{ fontSize: 22 }}>{item.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{item.detail}</div>
+                  </div>
+                  <span className="badge badge-success">{item.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/dashboard/stats">
+              <button className="btn-primary" style={{ padding: "14px 28px" }}>📊 View Full Analysis</button>
+            </Link>
+            <Link href="/dashboard/diagnosis">
+              <button className="btn-secondary" style={{ padding: "14px 28px" }}>🔍 View Diagnosis</button>
+            </Link>
+            <button className="btn-secondary" style={{ padding: "14px 28px" }} onClick={() => setSubmitted(false)}>← Enter More Marks</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>✏️ Marks Entry System</h1>
-        <p style={{ color: "var(--text-secondary)" }}>Quick-enter marks for automated statistical analysis.</p>
+        <p style={{ color: "var(--text-secondary)" }}>Quick-enter marks → auto-triggers Stats + Diagnosis + Remedial.</p>
       </div>
 
       <div className="card" style={{ marginBottom: 24 }}>
@@ -50,14 +106,14 @@ export default function MarksEntry() {
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", gap: 10, background: "rgba(15,23,42,0.5)", padding: 4, borderRadius: 12 }}>
-            <button 
-              onClick={() => setMethod("total")} 
+            <button
+              onClick={() => setMethod("total")}
               style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, background: method === "total" ? "var(--primary)" : "transparent", color: method === "total" ? "white" : "var(--text-secondary)", border: "none", cursor: "pointer", transition: "all 0.2s" }}
             >
               Total Marks Entry
             </button>
-            <button 
-              onClick={() => setMethod("question")} 
+            <button
+              onClick={() => setMethod("question")}
               style={{ padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, background: method === "question" ? "var(--primary)" : "transparent", color: method === "question" ? "white" : "var(--text-secondary)", border: "none", cursor: "pointer", transition: "all 0.2s" }}
             >
               Question-wise Entry
@@ -89,7 +145,7 @@ export default function MarksEntry() {
               </tr>
             </thead>
             <tbody>
-              {STUDENTS.map((s, i) => (
+              {STUDENTS.map((s) => (
                 <tr key={s.id} style={{ borderBottom: "1px solid rgba(51, 65, 85, 0.4)" }}>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{s.roll}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14, fontWeight: 500 }}>{s.name}</td>
@@ -120,7 +176,9 @@ export default function MarksEntry() {
           <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>Showing {STUDENTS.length} students</div>
           <div style={{ display: "flex", gap: 12 }}>
             <button className="btn-secondary" style={{ padding: "10px 24px", fontSize: 14 }}>Save Draft</button>
-            <button className="btn-primary" style={{ padding: "10px 24px", fontSize: 14 }}>Submit & Analyze</button>
+            <button className="btn-primary" style={{ padding: "10px 24px", fontSize: 14 }} onClick={handleSubmit}>
+              ⚡ Submit &amp; Auto-Analyze
+            </button>
           </div>
         </div>
       </div>

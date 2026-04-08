@@ -6,6 +6,7 @@ export default function LessonPlanner() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [sessionPack, setSessionPack] = useState(true); // SCAMPER: Combine — generate Lesson + Aids together
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -96,8 +97,18 @@ export default function LessonPlanner() {
               <textarea name="instructions" value={form.instructions} onChange={handleChange} className="input-field" placeholder="Any custom requirements..." rows={3} />
             </div>
           </div>
-          <button className="btn-primary" onClick={generate} disabled={!form.lesson || !form.topic} style={{ marginTop: 24, width: "100%", justifyContent: "center", opacity: !form.lesson || !form.topic ? 0.5 : 1 }}>
-            ✨ Generate Lesson Plan with AI
+
+          {/* SCAMPER: Combine — Session Pack Toggle */}
+          <div style={{ marginTop: 20, padding: 16, background: "rgba(0,150,136,0.06)", borderRadius: 12, border: "1px solid rgba(0,150,136,0.15)", display: "flex", alignItems: "center", gap: 12 }}>
+            <input type="checkbox" checked={sessionPack} onChange={() => setSessionPack(!sessionPack)} style={{ width: 18, height: 18, accentColor: "var(--primary)" }} />
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)" }}>📦 Generate Complete Session Pack</div>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>Also generates PPT Outline + Activity + Blackboard layout for this topic</div>
+            </div>
+          </div>
+
+          <button className="btn-primary" onClick={generate} disabled={!form.lesson || !form.topic} style={{ marginTop: 20, width: "100%", justifyContent: "center", opacity: !form.lesson || !form.topic ? 0.5 : 1 }}>
+            ✨ {sessionPack ? "Generate Session Pack" : "Generate Lesson Plan"}
           </button>
         </div>
       )}
@@ -128,6 +139,52 @@ export default function LessonPlanner() {
               </div>
             )}
           </div>
+
+          {/* SCAMPER: Combine — Session Pack Resources */}
+          {sessionPack && !loading && result && (
+            <div className="card animate-fade-in" style={{ marginTop: 24 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>📦 Session Pack Resources</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+                <div style={{ padding: 20, background: "rgba(15,23,42,0.4)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <span style={{ fontSize: 24 }}>📊</span>
+                    <h3 style={{ fontSize: 15, fontWeight: 700 }}>PPT Outline (8 Slides)</h3>
+                  </div>
+                  <ol style={{ paddingLeft: 20, color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.8 }}>
+                    <li>Title: {form.topic}</li>
+                    <li>Learning Objectives</li>
+                    <li>Core Concept Explanation</li>
+                    <li>Worked Examples</li>
+                    <li>Interactive Activity</li>
+                    <li>Practice Problems</li>
+                    <li>Summary & Key Takeaways</li>
+                    <li>Homework Assignment</li>
+                  </ol>
+                </div>
+                <div style={{ padding: 20, background: "rgba(15,23,42,0.4)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <span style={{ fontSize: 24 }}>🎲</span>
+                    <h3 style={{ fontSize: 15, fontWeight: 700 }}>Quick Activity (10 min)</h3>
+                  </div>
+                  <p style={{ color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.7 }}>
+                    <strong>Think-Pair-Share:</strong> Students pair up and solve one problem related to {form.topic}. Each pair explains their approach to the class. No materials needed.
+                  </p>
+                </div>
+                <div style={{ padding: 20, background: "#1a362a", borderRadius: 12, border: "4px solid #3e2723", fontFamily: "monospace" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <span style={{ fontSize: 24 }}>🖍️</span>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: "#e0f2f1" }}>Blackboard Layout</h3>
+                  </div>
+                  <div style={{ color: "#a7f3d0", fontSize: 12, lineHeight: 1.8 }}>
+                    [LEFT] Previous Knowledge<br/>
+                    [CENTER] {form.topic.toUpperCase()}<br/>
+                    — Formula / Diagram —<br/>
+                    [RIGHT] Evaluation Q1-Q3
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

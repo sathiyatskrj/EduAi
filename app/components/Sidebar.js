@@ -3,22 +3,30 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", icon: "🏠", label: "Dashboard" },
-  { href: "/dashboard/lesson", icon: "📚", label: "Lesson Planner" },
+// SCAMPER: Eliminate — Simplified to 5 core tabs + collapsible "More"
+const CORE_NAV = [
+  { href: "/dashboard", icon: "🏠", label: "Home" },
+  { href: "/dashboard/lesson", icon: "📚", label: "Lesson" },
+  { href: "/dashboard/test", icon: "🧪", label: "Test" },
+  { href: "/dashboard/stats", icon: "📊", label: "Stats" },
+  { href: "/dashboard/students", icon: "👤", label: "Students" },
+];
+
+const MORE_NAV = [
   { href: "/dashboard/aids", icon: "🎨", label: "Teaching Aids" },
-  { href: "/dashboard/test", icon: "🧪", label: "Test Generator" },
   { href: "/dashboard/marks", icon: "✏️", label: "Marks Entry" },
-  { href: "/dashboard/stats", icon: "📊", label: "Statistics" },
   { href: "/dashboard/diagnosis", icon: "🔍", label: "Diagnosis" },
   { href: "/dashboard/remedial", icon: "💊", label: "Remedial" },
-  { href: "/dashboard/students", icon: "👤", label: "Students" },
   { href: "/dashboard/settings", icon: "⚙️", label: "Settings" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  // Auto-expand "More" if current path is inside it
+  const isMoreActive = MORE_NAV.some(item => pathname === item.href);
 
   return (
     <>
@@ -53,7 +61,8 @@ export default function Sidebar() {
         </div>
 
         <nav style={{ flex: 1, padding: "16px 0", overflowY: "auto" }}>
-          {NAV_ITEMS.map((item) => (
+          {/* Core 5 Tabs */}
+          {CORE_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -65,6 +74,43 @@ export default function Sidebar() {
               <span>{item.label}</span>
             </Link>
           ))}
+
+          {/* Collapsible "More" Section */}
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={() => setMoreOpen(!moreOpen)}
+              style={{
+                display: "flex", alignItems: "center", gap: 14, padding: "14px 24px", width: "100%",
+                color: isMoreActive ? "var(--primary)" : "var(--text-secondary)",
+                background: isMoreActive ? "rgba(0, 150, 136, 0.05)" : "transparent",
+                border: "none", cursor: "pointer", fontSize: 15, fontWeight: 500,
+                borderLeft: isMoreActive ? "3px solid var(--primary)" : "3px solid transparent",
+                transition: "all 0.2s"
+              }}
+            >
+              <span style={{ fontSize: 20 }}>📁</span>
+              <span style={{ flex: 1, textAlign: "left" }}>More Tools</span>
+              <span style={{ fontSize: 12, transform: moreOpen || isMoreActive ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▶</span>
+            </button>
+
+            {(moreOpen || isMoreActive) && (
+              <div style={{ paddingLeft: 16 }}>
+                {MORE_NAV.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`sidebar-link ${pathname === item.href ? "active" : ""}`}
+                    onClick={() => setOpen(false)}
+                    id={`nav-${item.label.toLowerCase().replace(/\s/g, "-")}`}
+                    style={{ paddingLeft: 24, fontSize: 14 }}
+                  >
+                    <span style={{ fontSize: 17 }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border)" }}>
