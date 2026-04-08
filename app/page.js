@@ -11,7 +11,7 @@ export default function Home() {
           <span style={{ fontSize: 22, fontWeight: 800, color: "var(--primary)" }}>EduAI</span>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <Link href="/dashboard" className="btn-primary" style={{ padding: "10px 24px", fontSize: 14 }}>Get Started Free →</Link>
+          <Link href="/onboarding" className="btn-primary" style={{ padding: "10px 24px", fontSize: 14 }}>Get Started Free →</Link>
         </div>
       </nav>
 
@@ -27,7 +27,7 @@ export default function Home() {
             Automate lesson planning, test creation, statistical analysis & remedial teaching. What takes 3 weeks manually — done in 3 hours on EduAI.
           </p>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/dashboard" className="btn-primary" style={{ padding: "16px 36px", fontSize: 17 }}>Start Free — No Login Needed</Link>
+            <Link href="/onboarding" className="btn-primary" style={{ padding: "16px 36px", fontSize: 17 }}>Start Free — No Login Needed</Link>
             <button className="btn-secondary" style={{ padding: "16px 36px", fontSize: 17 }}>Watch Demo</button>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function Home() {
       <section style={{ padding: "100px 40px", textAlign: "center" }}>
         <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>For Teachers. By Teachers.</h2>
         <p style={{ color: "var(--text-secondary)", fontSize: 17, marginBottom: 40 }}>Join 10 lakh+ B.Ed interns transforming education with AI.</p>
-        <Link href="/dashboard" className="btn-primary animate-pulse-glow" style={{ padding: "18px 48px", fontSize: 18 }}>Launch EduAI Dashboard →</Link>
+        <Link href="/onboarding" className="btn-primary animate-pulse-glow" style={{ padding: "18px 48px", fontSize: 18 }}>Launch EduAI Dashboard →</Link>
       </section>
 
       <footer style={{ padding: "40px", textAlign: "center", borderTop: "1px solid var(--border)", color: "var(--text-secondary)", fontSize: 14 }}>
