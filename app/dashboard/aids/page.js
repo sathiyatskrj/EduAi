@@ -1,208 +1,193 @@
 "use client";
 import { useState } from "react";
+import { useApp } from "@/app/components/AppContext";
+import { consumeStream } from "@/app/utils/ai-stream";
+import { Copy, Sparkles } from "lucide-react";
 
 export default function TeachingAids() {
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [activeTab, setActiveTab] = useState("ppt");
-
-  const generateAids = () => {
-    if (!topic) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setGenerated(true);
-    }, 2500); // Simulate API latency
-  };
+  const [tabContent, setTabContent] = useState({});
+  const [tabLoading, setTabLoading] = useState(false);
+  const { aiProvider, ollamaModel, incrementAiUsage, showToast } = useApp();
 
   const TABS = [
-    { id: "ppt", label: "PPT Slides", icon: "📊" },
-    { id: "activities", label: "Activities", icon: "🎲" },
-    { id: "examples", label: "Real-life Examples", icon: "🌍" },
-    { id: "flashcards", label: "Flashcards", icon: "🗂️" },
-    { id: "story", label: "Story / Hook", icon: "📖" },
-    { id: "blackboard", label: "Blackboard Work", icon: "🖍️" },
+    { id: "ppt", label: "PPT Slides", icon: "📊", prompt: "Generate a detailed 8-slide PowerPoint presentation outline" },
+    { id: "activities", label: "Activities", icon: "🎲", prompt: "Generate 3 no-tech classroom activities with materials, steps, and duration" },
+    { id: "examples", label: "Real-life Examples", icon: "🌍", prompt: "Generate 5 real-life examples and analogies students can relate to" },
+    { id: "flashcards", label: "Flashcards", icon: "🗂️", prompt: "Generate 6 Q&A flashcard pairs for quick revision" },
+    { id: "story", label: "Story / Hook", icon: "📖", prompt: "Generate an engaging 2-paragraph story hook to start the lesson" },
+    { id: "blackboard", label: "Blackboard", icon: "🖍️", prompt: "Generate a 3-panel blackboard layout plan (Left: Previous Knowledge, Center: Core Concept, Right: Evaluation)" },
   ];
+
+  const generateForTab = async (tabId) => {
+    const tab = TABS.find(t => t.id === tabId);
+    if (!tab || tabContent[tabId]) return;
+    setTabLoading(true);
+    incrementAiUsage();
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemPrompt: `You are EduAI Teaching Aid Generator. Generate clear, practical, classroom-ready teaching resources. Use markdown formatting.`,
+          prompt: `${tab.prompt} for the topic: "${topic}". Make it practical for an Indian classroom setting.`,
+          provider: aiProvider,
+          model: ollamaModel,
+        }),
+      });
+      setTabLoading(false);
+      await consumeStream(
+        res,
+        (text) => setTabContent(prev => ({ ...prev, [tabId]: text })),
+        null,
+        (err) => setTabContent(prev => ({ ...prev, [tabId]: "Error: " + err }))
+      );
+    } catch (err) {
+      setTabContent(prev => ({ ...prev, [tabId]: "Error: " + err.message }));
+      setTabLoading(false);
+    }
+  };
+
+  const startGeneration = async () => {
+    if (!topic) return;
+    setLoading(true);
+    setTabContent({});
+    incrementAiUsage();
+    // Generate the first tab (PPT) to start
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemPrompt: `You are EduAI Teaching Aid Generator. Generate clear, practical, classroom-ready resources. Use markdown formatting.`,
+          prompt: `Generate a detailed 8-slide PowerPoint presentation outline for the topic: "${topic}". Include slide titles, bullet points, and visual suggestions. Make it practical for an Indian classroom.`,
+          provider: aiProvider,
+          model: ollamaModel,
+        }),
+      });
+      setLoading(false);
+      setGenerated(true);
+      setActiveTab("ppt");
+      await consumeStream(
+        res,
+        (text) => setTabContent(prev => ({ ...prev, ppt: text })),
+        null,
+        (err) => setTabContent(prev => ({ ...prev, ppt: "Error: " + err }))
+      );
+    } catch (err) {
+      setTabContent(prev => ({ ...prev, ppt: "Error: " + err.message }));
+      setLoading(false);
+      setGenerated(true);
+    }
+  };
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    if (!tabContent[tabId]) {
+      generateForTab(tabId);
+    }
+  };
+
+  const renderAI = (text) => text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^### (.*$)/gm, "<h3>$1</h3>")
+    .replace(/^## (.*$)/gm, "<h2>$1</h2>")
+    .replace(/^# (.*$)/gm, "<h1>$1</h1>")
+    .replace(/\n/g, "<br/>");
 
   return (
     <div className="animate-fade-in">
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>🎨 Teaching Aid Generator</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: 15 }}>Generate complete resource packs from a single topic in 30 seconds.</p>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4, display: "flex", alignItems: "center", gap: 10 }}>
+          <span className="icon-wrap" style={{ fontSize: 20 }}>🎨</span> Teaching Aid Generator
+        </h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>Generate complete resource packs from a single topic using AI.</p>
       </div>
 
+      {/* Input */}
       {!generated && !loading && (
-        <div className="card" style={{ maxWidth: 640 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>What are we teaching today?</h2>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8, display: "block" }}>Topic Name</label>
-            <input 
-              type="text" 
-              className="input-field" 
+        <div className="card animate-scale-in" style={{ maxWidth: 600 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 20 }}>What are we teaching today?</h2>
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8, display: "block" }}>Topic Name</label>
+            <input
+              type="text" className="input-field"
               placeholder="e.g., Photosynthesis, Laws of Motion, Fractions..."
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              style={{ fontSize: 16, padding: "16px 20px" }}
+              value={topic} onChange={(e) => setTopic(e.target.value)}
+              style={{ fontSize: 15, padding: "14px 18px" }}
             />
           </div>
-          <button 
-            className="btn-primary w-full" 
-            style={{ width: "100%", justifyContent: "center", padding: "16px", fontSize: 16 }}
-            onClick={generateAids}
-            disabled={!topic}
-          >
-            ✨ Generate Complete Resource Pack
+          <button className="btn-primary" style={{ width: "100%", justifyContent: "center", padding: 14, fontSize: 15 }} onClick={startGeneration} disabled={!topic}>
+            <Sparkles size={16} /> Generate Complete Resource Pack
           </button>
         </div>
       )}
 
       {loading && (
-        <div className="card" style={{ maxWidth: 640, textAlign: "center", padding: "60px 40px" }}>
-          <div className="animate-float" style={{ fontSize: 64, marginBottom: 24 }}>🧠</div>
-          <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Crafting Resources for "{topic}"</h3>
-          <p style={{ color: "var(--text-secondary)", marginBottom: 32 }}>Compiling PPTs, stories, and activities...</p>
-          <div className="loading-shimmer" style={{ height: 6, width: "100%", borderRadius: 6 }}></div>
+        <div className="card animate-fade-in" style={{ maxWidth: 600, textAlign: "center", padding: "50px 36px" }}>
+          <div className="animate-float" style={{ fontSize: 56, marginBottom: 20 }}>🧠</div>
+          <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>Crafting Resources for &quot;{topic}&quot;</h3>
+          <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>Generating PPT, activities, flashcards...</p>
+          <div className="skeleton" style={{ height: 5, width: "100%", borderRadius: 6 }} />
         </div>
       )}
 
       {generated && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
             <div>
-              <span className="badge badge-success" style={{ marginBottom: 8 }}>Ready</span>
-              <h2 style={{ fontSize: 22, fontWeight: 800 }}>Resource Pack: {topic}</h2>
+              <span className="badge badge-success" style={{ marginBottom: 6, display: "inline-block" }}>AI Generated</span>
+              <h2 style={{ fontSize: 20, fontWeight: 800 }}>Resource Pack: {topic}</h2>
             </div>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button className="btn-secondary" onClick={() => { setGenerated(false); setTopic(""); }}>← New Topic</button>
-              <button className="btn-primary">⬇ Download ZIP</button>
-            </div>
+            <button className="btn-secondary no-print" onClick={() => { setGenerated(false); setTopic(""); setTabContent({}); }}>← New Topic</button>
           </div>
 
-          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16, marginBottom: 24 }}>
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 14, marginBottom: 20 }}>
             {TABS.map(tab => (
-              <button 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+              <button
+                key={tab.id} onClick={() => handleTabClick(tab.id)}
                 style={{
-                  display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 12, fontWeight: 600, fontSize: 14, cursor: "pointer", whiteSpace: "nowrap",
-                  background: activeTab === tab.id ? "var(--primary)" : "var(--bg-card)",
+                  display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 12, fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap",
+                  background: activeTab === tab.id ? "var(--primary)" : "rgba(255,255,255,0.04)",
                   color: activeTab === tab.id ? "white" : "var(--text-secondary)",
-                  border: activeTab === tab.id ? "1px solid var(--primary)" : "1px solid var(--border)",
-                  transition: "all 0.2s"
+                  border: activeTab === tab.id ? "1px solid var(--primary)" : "1px solid rgba(255,255,255,0.06)", transition: "all 0.2s"
                 }}
               >
-                <span style={{ fontSize: 18 }}>{tab.icon}</span> {tab.label}
+                <span style={{ fontSize: 16 }}>{tab.icon}</span> {tab.label}
+                {tabContent[tab.id] && <span style={{ fontSize: 9, marginLeft: 2 }}>✓</span>}
               </button>
             ))}
           </div>
 
-          {/* Tab Content Renderers using mock data arrays */}
-          <div className="card animate-fade-in" style={{ minHeight: 400 }}>
-            {activeTab === "ppt" && (
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Presentation Outline (8 Slides)</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-                  {["Title: Introduction to " + topic, "Objective: What we will learn", "Concept Explanation", "Key Examples", "Interactive Activity", "Practice Questions", "Summary & Recap", "Homework Assignment"].map((slide, index) => (
-                    <div key={index} style={{ padding: 20, background: "rgba(15,23,42,0.4)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700, marginBottom: 8 }}>SLIDE {index + 1}</div>
-                      <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{slide}</div>
-                      <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>• Bullet point content regarding {topic}...<br/>• Supporting visual suggestion: diagram of process.</div>
-                    </div>
-                  ))}
-                </div>
+          {/* Content */}
+          <div className="card animate-fade-in" style={{ minHeight: 300 }}>
+            {tabLoading && !tabContent[activeTab] ? (
+              <div style={{ textAlign: "center", padding: 40 }}>
+                <div className="animate-float" style={{ fontSize: 40, marginBottom: 12 }}>{TABS.find(t => t.id === activeTab)?.icon}</div>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>Generating {TABS.find(t => t.id === activeTab)?.label}...</div>
+                <div className="skeleton" style={{ width: "50%", height: 5, margin: "0 auto" }} />
               </div>
-            )}
-
-            {activeTab === "activities" && (
+            ) : tabContent[activeTab] ? (
               <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Classroom Activities (No Tech Required)</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {[1, 2, 3].map(i => (
-                    <div key={i} style={{ padding: 24, background: "rgba(15,23,42,0.4)", borderRadius: 12, border: "1px left solid var(--primary)", borderLeftWidth: 4 }}>
-                      <h4 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Activity {i}: The {topic} Challenge</h4>
-                      <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 12 }}><strong>Materials:</strong> Paper, pencils, stopwatch</p>
-                      <ul style={{ color: "var(--text-secondary)", fontSize: 14, paddingLeft: 20 }}>
-                        <li style={{ marginBottom: 4 }}>Divide class into groups of 4.</li>
-                        <li style={{ marginBottom: 4 }}>Give them a problem related to {topic}.</li>
-                        <li>First group to correctly identify the core principle wins.</li>
-                      </ul>
-                    </div>
-                  ))}
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 700 }}>{TABS.find(t => t.id === activeTab)?.icon} {TABS.find(t => t.id === activeTab)?.label}</h3>
+                  <button className="btn-secondary no-print" style={{ padding: "5px 10px", fontSize: 11 }} onClick={() => { navigator.clipboard.writeText(tabContent[activeTab]); showToast("Copied!"); }}>
+                    <Copy size={11} /> Copy
+                  </button>
                 </div>
+                <div className="ai-content" style={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }} dangerouslySetInnerHTML={{ __html: renderAI(tabContent[activeTab]) }} />
               </div>
-            )}
-
-            {activeTab === "examples" && (
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Real-life Connections</h3>
-                <ul style={{ display: "flex", flexDirection: "column", gap: 12, listStyle: "none", padding: 0 }}>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <li key={i} style={{ display: "flex", gap: 16, alignItems: "center", padding: "16px", background: "rgba(15,23,42,0.4)", borderRadius: 12 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(0,150,136,0.1)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{i}</div>
-                      <div style={{ color: "var(--text-primary)", fontSize: 15 }}>How {topic} is used when a chef measures ingredients in a kitchen.</div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {activeTab === "flashcards" && (
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                   <h3 style={{ fontSize: 18, fontWeight: 700 }}>Printable Flashcards</h3>
-                   <button className="btn-secondary" style={{ padding: "6px 12px", fontSize: 12 }}>⎙ Print Layout</button>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, background: "var(--border)", borderRadius: 12, overflow: "hidden" }}>
-                      <div style={{ padding: 24, background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: 120 }}>
-                        <strong>Q: What is the main definition of {topic}?</strong>
-                      </div>
-                      <div style={{ padding: 24, background: "rgba(0,150,136,0.05)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: 120 }}>
-                        <span style={{ color: "var(--primary)" }}>A: It is the fundamental concept of...</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === "story" && (
-              <div style={{ maxWidth: 800 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Lesson Hook: The Narrative</h3>
-                <div style={{ padding: 32, background: "rgba(15,23,42,0.6)", borderRadius: 16, fontStyle: "italic", fontSize: 16, lineHeight: 1.8, color: "var(--text-primary)", position: "relative" }}>
-                  <span style={{ position: "absolute", top: 10, left: 10, fontSize: 40, color: "var(--border)" }}>"</span>
-                  Imagine you are walking down a busy street in ancient Rome. You need to divide the remaining food among the citizens, but how do you measure it accurately? This was the exact problem that led to the discovery of <strong>{topic}</strong>. <br/><br/>
-                  By understanding how the universe naturally seeks balance, we can apply {topic} not just in equations, but in understanding how the world around us functions every single day!
-                  <span style={{ position: "absolute", bottom: -10, right: 20, fontSize: 40, color: "var(--border)" }}>"</span>
-                </div>
-                <button className="btn-secondary" style={{ marginTop: 20 }}>Copy Story</button>
-              </div>
-            )}
-
-            {activeTab === "blackboard" && (
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Blackboard Architecture</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, padding: 24, background: "#1a362a", borderRadius: 16, minHeight: 300, border: "8px solid #3e2723" }}>
-                   <div style={{ color: "#e0f2f1", fontFamily: "monospace", borderRight: "1px dashed #4db6ac", paddingRight: 16 }}>
-                     <strong>[Left Panel: Previous Knowledge]</strong><br/><br/>
-                     - Definition A<br/>
-                     - Recall Quiz (3 mins)
-                   </div>
-                   <div style={{ color: "#e0f2f1", fontFamily: "monospace", borderRight: "1px dashed #4db6ac", padding: "0 16px" }}>
-                     <strong>[Center Panel: Core Idea]</strong><br/><br/>
-                     <div style={{ textAlign: "center", fontSize: 24, marginBottom: 16 }}>{topic.toUpperCase()}</div>
-                     (Draw large flow chart mapping Concept -{">"} Formula)
-                   </div>
-                   <div style={{ color: "#e0f2f1", fontFamily: "monospace", paddingLeft: 16 }}>
-                     <strong>[Right Panel: Evaluation]</strong><br/><br/>
-                     1. Solve x = y + 2<br/>
-                     2. define terms.<br/>
-                     <br/>
-                     *Homework:* Pg 42, Q1-5
-                   </div>
-                </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: 40, color: "var(--text-secondary)" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>{TABS.find(t => t.id === activeTab)?.icon}</div>
+                <p>Click to generate {TABS.find(t => t.id === activeTab)?.label} content</p>
+                <button className="btn-primary" style={{ marginTop: 12, padding: "10px 20px", fontSize: 13 }} onClick={() => generateForTab(activeTab)}>
+                  <Sparkles size={13} /> Generate
+                </button>
               </div>
             )}
           </div>
