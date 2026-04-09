@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 
+import 'screens/menu_screen.dart';
+
 // API Configuration
 // Using 10.0.2.2 which is localhost alias for Android Emulator
 // Change to your machine's local IP if testing on a real device.
@@ -61,6 +63,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     HomeTab(),
     LessonPlannerTab(),
     StatsTab(),
+    MenuScreen(),
   ];
 
   @override
@@ -106,6 +109,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   _buildNavItem(0, Icons.grid_view_rounded, "Home"),
                   _buildNavItem(1, Icons.auto_awesome_rounded, "AI Plan"),
                   _buildNavItem(2, Icons.bar_chart_rounded, "Stats"),
+                  _buildNavItem(3, Icons.more_horiz_rounded, "More"),
                 ],
               ),
             ),
