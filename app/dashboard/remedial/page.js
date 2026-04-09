@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useApp } from "@/app/components/AppContext";
 import { consumeStream } from "@/app/utils/ai-stream";
+import { parseMarkdown } from "@/app/utils/markdown";
 import { Copy, Printer, Sparkles, Plus } from "lucide-react";
 
 export default function Remedial() {
@@ -33,12 +34,7 @@ export default function Remedial() {
     } catch (err) { setResult("Error: " + err.message); setLoading(false); }
   };
 
-  const renderAI = (text) => text
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/^### (.*$)/gm, "<h3>$1</h3>")
-    .replace(/^## (.*$)/gm, "<h2>$1</h2>")
-    .replace(/^# (.*$)/gm, "<h1>$1</h1>")
-    .replace(/\n/g, "<br/>");
+  const renderAI = (text) => parseMarkdown(text);
 
   return (
     <div className="animate-fade-in">
@@ -106,7 +102,7 @@ export default function Remedial() {
         </div>
 
         {(result || loading) && (
-          <div className="card animate-fade-in">
+          <div className="card animate-fade-in" style={{ minWidth: 0 }}>
             {loading ? (
               <div style={{ textAlign: "center", padding: 50 }}>
                 <div className="animate-float" style={{ fontSize: 44, marginBottom: 14 }}>🧠</div>

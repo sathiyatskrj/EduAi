@@ -3,6 +3,7 @@ import { useState } from "react";
 import { exportToPDF } from "@/app/utils/exports";
 import { useApp } from "@/app/components/AppContext";
 import { consumeStream } from "@/app/utils/ai-stream";
+import { parseMarkdown } from "@/app/utils/markdown";
 import { Copy, FileText, Printer, RotateCcw, Clock, BookOpen } from "lucide-react";
 
 export default function LessonPlanner() {
@@ -70,12 +71,7 @@ export default function LessonPlanner() {
   };
 
   const renderAI = (text) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/^### (.*$)/gm, "<h3>$1</h3>")
-      .replace(/^## (.*$)/gm, "<h2>$1</h2>")
-      .replace(/^# (.*$)/gm, "<h1>$1</h1>")
-      .replace(/\n/g, "<br/>");
+    return parseMarkdown(text);
   };
 
   return (

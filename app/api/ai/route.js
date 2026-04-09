@@ -73,19 +73,47 @@ async function handleStreamingResponse(provider, safePrompt, safeSystem, model) 
           if (!res.ok) throw new Error(`Gemini 2.0 error: ${res.status}`);
           await streamGeminiResponse(res.body, controller, encoder, decoder);
         } else {
-          // Gemini 1.5 Flash (default)
+          // Gemini 3.1 Flash Lite (Best free tier: 500 RPD)
           if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not set in environment");
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=${GEMINI_API_KEY}`;
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: safeSystem ? `${safeSystem}\n\n${safePrompt}` : safePrompt }] }],
-              generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
-            })
-          });
-          if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
-          await streamGeminiResponse(res.body, controller, encoder, decoder);
+          
+          let lastErr;
+          const maxAttempts = 3;
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
+             try {
+               const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:streamGenerateContent?key=${GEMINI_API_KEY}`;
+               const res = await fetch(url, {
+                 method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({
+                   contents: [{ parts: [{ text: safeSystem ? `${safeSystem}\n\n${safePrompt}` : safePrompt }] }],
+                   generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+                 })
+               });
+
+               if (res.status === 429) {
+                 const wait = Math.pow(2, attempt) * 2000;
+                 console.warn(`[AI API] 429 Rate Limit. Retrying in ${wait}ms... (Attempt ${attempt + 1}/${maxAttempts})`);
+                 if (attempt < maxAttempts - 1) {
+                   await new Promise(r => setTimeout(r, wait));
+                   continue;
+                 }
+                 throw new Error("Rate limit exceeded. Please wait a minute or try Offline Mode (Ollama).");
+               }
+
+               if (res.status === 503 && attempt < maxAttempts - 1) {
+                 console.warn(`[AI API] 503 Overloaded. Retrying in 1s...`);
+                 await new Promise(r => setTimeout(r, 1000));
+                 continue;
+               }
+
+               if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
+               await streamGeminiResponse(res.body, controller, encoder, decoder);
+               return; // Success
+             } catch (e) {
+               lastErr = e;
+               if (attempt === maxAttempts - 1) throw e;
+             }
+          }
         }
       } catch (err) {
         controller.enqueue(encoder.encode(`\n\n⚠️ Error: ${err.message}`));
@@ -99,24 +127,41 @@ async function handleStreamingResponse(provider, safePrompt, safeSystem, model) 
 async function streamGeminiResponse(body, controller, encoder, decoder) {
   const reader = body.getReader();
   let buffer = "";
+  
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
+    
     buffer += decoder.decode(value, { stream: true });
-    // Extract all "text" fields from the buffered JSON chunks
-    const matches = buffer.match(/"text":\s*"((?:[^"\\]|\\.)*)"/g);
-    if (matches) {
-      for (const match of matches) {
-        const raw = match.slice(8, -1);
-        const text = raw
-          .replace(/\\n/g, "\n")
-          .replace(/\\"/g, '"')
-          .replace(/\\\\/g, "\\")
-          .replace(/\\t/g, "\t");
-        controller.enqueue(encoder.encode(text));
-      }
-      // Clear processed buffer
-      buffer = "";
+    
+    // Gemini streaming returns an array of chunks: [ { "candidates": [...] }, ... ]
+    // Each chunk is usually a JSON object. However, the stream might deliver partial objects.
+    // We attempt to find complete JSON objects in the buffer.
+    
+    let boundary = buffer.indexOf('}\n,');
+    if (boundary === -1) boundary = buffer.indexOf('}]'); // End of stream
+    
+    // Robust approach: Look for "text": "..." and extract specifically.
+    // We use a global regex but we DON'T clear the buffer blindly.
+    const regex = /"text":\s*"((?:[^"\\]|\\.)*)"/g;
+    let match;
+    let lastIndex = 0;
+    
+    while ((match = regex.exec(buffer)) !== null) {
+      const raw = match[1];
+      const text = raw
+        .replace(/\\n/g, "\n")
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, "\\")
+        .replace(/\\t/g, "\t");
+      
+      controller.enqueue(encoder.encode(text));
+      lastIndex = regex.lastIndex;
+    }
+    
+    // Keep the part of the buffer that hasn't been matched yet (might be a partial "text" key)
+    if (lastIndex > 0) {
+      buffer = buffer.slice(lastIndex);
     }
   }
 }
@@ -125,9 +170,19 @@ async function streamGeminiResponse(body, controller, encoder, decoder) {
 export async function POST(request) {
   try {
     const { prompt, systemPrompt, provider, model } = await request.json();
+    console.log(`[AI API] Request received. Provider: ${provider}, Model: ${model}`);
+    
+    if (provider === "gemini" && !GEMINI_API_KEY) {
+      console.error("[AI API] Error: GEMINI_API_KEY is missing in environment.");
+      return NextResponse.json({ error: "GEMINI_API_KEY not set in environment" }, { status: 500 });
+    }
+
     const safePrompt = stripPII(prompt);
     const safeSystem = stripPII(systemPrompt);
+    
     const stream = await handleStreamingResponse(provider || "gemini", safePrompt, safeSystem, model);
+    console.log("[AI API] Starting stream response...");
+    
     return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",

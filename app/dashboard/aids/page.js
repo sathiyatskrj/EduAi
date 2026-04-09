@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useApp } from "@/app/components/AppContext";
 import { consumeStream } from "@/app/utils/ai-stream";
+import { parseMarkdown } from "@/app/utils/markdown";
 import { Copy, Sparkles } from "lucide-react";
 
 export default function TeachingAids() {
@@ -91,12 +92,7 @@ export default function TeachingAids() {
     }
   };
 
-  const renderAI = (text) => text
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/^### (.*$)/gm, "<h3>$1</h3>")
-    .replace(/^## (.*$)/gm, "<h2>$1</h2>")
-    .replace(/^# (.*$)/gm, "<h1>$1</h1>")
-    .replace(/\n/g, "<br/>");
+  const renderAI = (text) => parseMarkdown(text);
 
   return (
     <div className="animate-fade-in">

@@ -81,10 +81,10 @@ export default function Settings() {
                 border: aiProvider === "gemini" ? "2px solid var(--primary)" : "1px solid rgba(255,255,255,0.08)",
                 background: aiProvider === "gemini" ? "rgba(0,150,136,0.08)" : "rgba(255,255,255,0.02)",
               }}
-              onClick={() => { updateAiProvider("gemini"); showToast("Gemini 1.5 Flash Activated ☁️"); }}
+              onClick={() => { updateAiProvider("gemini"); showToast("Gemini 3.1 Flash Lite Activated ☁️"); }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Gemini 1.5 Flash <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-secondary)" }}>(Cloud)</span></div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Gemini 3.1 Flash Lite <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-secondary)" }}>(Cloud)</span></div>
                 {aiProvider === "gemini" && <span style={{ color: "var(--primary)", fontWeight: 700 }}>✓</span>}
               </div>
               <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>Fast cloud generation via Google AI. Requires GEMINI_API_KEY in environment.</p>

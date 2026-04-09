@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/app/components/AppContext";
 import { consumeStream } from "@/app/utils/ai-stream";
+import { parseMarkdown } from "@/app/utils/markdown";
 import { Sparkles, ChevronRight } from "lucide-react";
 
 const QUESTIONS = [
@@ -175,9 +176,7 @@ export default function Diagnosis() {
               <div className="skeleton skeleton-text" style={{ width: "70%" }} />
             </div>
           ) : (
-            <div className="ai-content" style={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
-              {aiInsight}
-            </div>
+            <div className="ai-content" style={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }} dangerouslySetInnerHTML={{ __html: parseMarkdown(aiInsight) }} />
           )}
         </div>
       )}

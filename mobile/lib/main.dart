@@ -6,13 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import 'screens/menu_screen.dart';
-
-// API Configuration
-// Using 10.0.2.2 which is localhost alias for Android Emulator
-// Change to your machine's local IP if testing on a real device.
-const String API_URL = "http://10.0.2.2:3000/api/ai";
+import 'services/gemini_service.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
@@ -528,36 +525,22 @@ class _LessonPlannerTabState extends State<LessonPlannerTab> {
 
     try {
       final prompt =
-          "Generate a complete lesson plan:\n- Class: ${_classController.text}\n- Subject: ${_subjectController.text}\n- Topic: ${_topicController.text}\n\nProvide a comprehensive, detailed lesson plan in the exact B.Ed notebook format.";
+          "Generate a complete lesson plan:\n- Class: ${_classController.text}\n- Subject: ${_subjectController.text}\n- Topic: ${_topicController.text}\n\nProvide a comprehensive, detailed lesson plan in the exact B.Ed notebook format. Use markdown tables for teaching steps.";
       final systemPrompt =
-          "You are EduAI, an expert Indian school teacher assistant. Generate detailed lesson plans in structured format.";
+          "You are EduAI, an expert Indian school teacher assistant. Generate detailed lesson plans in structured markdown format with tables for CBSE/State Board schools. Include all sections: Preliminary Info, Instructional Objectives (SIOs), Previous Knowledge, Teaching Aids, Entry Behaviour, Announcement of Topic, Teaching Steps table (Teaching Point | Learning Experience | Behavioural Objective | Teaching Aid | Evaluation), Blackboard Work, Evaluation Questions, Homework, and Summary.";
 
-      final response = await http.post(
-        Uri.parse(API_URL),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"prompt": prompt, "systemPrompt": systemPrompt}),
+      final result = await GeminiService.generate(
+        prompt: prompt,
+        systemPrompt: systemPrompt,
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _generatedContent = data['result'] ?? "No result generated.";
-        });
-      } else {
-        setState(() {
-          _generatedContent =
-              "API Error (${response.statusCode}): Make sure your Next.js server is running and .env.local is configured.";
-        });
-      }
+      setState(() => _generatedContent = result);
     } catch (e) {
       setState(() {
         _generatedContent =
-            "Network Error: Could not reach the API.\nDetailed info: $e\n\nPlease ensure the Next.js app is running on port 3000.";
+            "⚠️ Error: $e";
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -668,21 +651,47 @@ class _LessonPlannerTabState extends State<LessonPlannerTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Result",
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF00BCD4),
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Result",
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF00BCD4),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.copy_rounded, color: Colors.white54, size: 20),
+                              onPressed: () {
+                                Clipboard.setData(ClipboardData(text: _generatedContent));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Copied!')),
+                                );
+                              },
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _generatedContent,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.white70,
-                            height: 1.5,
+                        const SizedBox(height: 12),
+                        MarkdownBody(
+                          data: _generatedContent,
+                          styleSheet: MarkdownStyleSheet(
+                            p: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.6),
+                            h1: GoogleFonts.inter(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+                            h2: GoogleFonts.inter(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                            h3: GoogleFonts.inter(color: const Color(0xFF00BCD4), fontSize: 16, fontWeight: FontWeight.w700),
+                            strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            em: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+                            listBullet: const TextStyle(color: Colors.white70),
+                            tableHead: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            tableBody: const TextStyle(color: Colors.white70),
+                            tableBorder: TableBorder.all(color: Colors.white24, width: 0.5),
+                            tableHeadAlign: TextAlign.left,
+                            tableCellsPadding: const EdgeInsets.all(10),
+                            horizontalRuleDecoration: const BoxDecoration(
+                              border: Border(top: BorderSide(color: Colors.white24)),
+                            ),
                           ),
                         ),
                       ],

@@ -61,12 +61,22 @@ export default function Sidebar() {
           <Link href="/dashboard" style={{ textDecoration: "none" }} onClick={() => setOpen(false)}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{
-                width: 42, height: 42, borderRadius: 12,
-                background: "var(--gradient-1)", display: "flex", alignItems: "center",
+                width: 44, height: 44, borderRadius: 12,
+                background: "#ffffff", display: "flex", alignItems: "center",
                 justifyContent: "center", flexShrink: 0,
-                boxShadow: "0 4px 14px rgba(0,150,136,0.4)"
+                boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+                padding: 4, overflow: "hidden"
               }}>
-                <Sparkles size={22} color="white" />
+                <img 
+                  src="/logo.png" 
+                  alt="EduAI Logo" 
+                  style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentNode.style.background = 'var(--gradient-1)';
+                    e.target.parentNode.innerHTML = '<span style="color:white;font-size:22px">✨</span>';
+                  }}
+                />
               </div>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: "var(--primary)", letterSpacing: "-0.5px" }}>EduAI</div>
