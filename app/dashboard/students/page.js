@@ -83,7 +83,7 @@ export default function Students() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
         {filtered.map((s, i) => (
-          <div key={i} className={`card stagger-${(i % 5) + 1}`} style={{ display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
+          <div key={i} className={`card animate-fade-in stagger-${(i % 5) + 1}`} style={{ display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
             {/* Auto-Remedial Generating Overlay */}
             {remedialDialog === s.id && (
               <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.92)", borderRadius: 16, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10 }}>

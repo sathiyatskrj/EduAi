@@ -48,7 +48,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="stagger-1" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 32 }}>
+      <div className="animate-fade-in stagger-1" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 32 }}>
         {STATS.map((s, i) => (
           <div key={i} className="card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
@@ -62,7 +62,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="stagger-2" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, marginBottom: 32 }}>
+      <div className="animate-fade-in stagger-2" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, marginBottom: 32 }}>
         {ACTIONS.map((a, i) => (
           <Link key={i} href={a.href} style={{ textDecoration: "none" }}>
             <div className="card" style={{ textAlign: "center", cursor: "pointer", padding: 20, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -75,7 +75,7 @@ export default function Dashboard() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 32 }}>
         {/* Today's Schedule */}
-        <div className="card stagger-3">
+        <div className="card animate-fade-in stagger-3">
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
             <div className="icon-wrap" style={{ width: 32, height: 32, fontSize: 16 }}>📅</div>
             Today&apos;s Schedule
@@ -104,7 +104,7 @@ export default function Dashboard() {
         </div>
 
         {/* SCAMPER: Modify — Priority-Scored Alerts */}
-        <div className="card stagger-4">
+        <div className="card animate-fade-in stagger-4">
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
             <div className="icon-wrap" style={{ width: 32, height: 32, fontSize: 16 }}>🔔</div>
             Prioritized Alerts
