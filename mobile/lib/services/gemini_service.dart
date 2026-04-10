@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 /// This bypasses the Next.js backend and calls Google's API directly,
 /// so the mobile app works standalone without the web server running.
 class GeminiService {
-  static const String _apiKey = 'AIzaSyBZC2qMCubB-xjMaFZp6KW3G3NMYNhlYMs';
+  static const String _apiKey = '';
   static const String _model = 'gemini-2.0-flash';
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
