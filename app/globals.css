@@ -583,16 +583,194 @@ textarea.input-field { resize: vertical; min-height: 100px; }
 /* ══════════════════════════════════════════════
    AI / MARKDOWN CONTENT
 ══════════════════════════════════════════════ */
-.ai-content h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; color: var(--primary); }
-.ai-content h2 { font-size: 1.25rem; font-weight: 600; margin: 16px 0 8px; color: var(--text-primary); }
-.ai-content h3 { font-size: 1.1rem; font-weight: 600; margin: 12px 0 6px; }
-.ai-content p { margin-bottom: 10px; line-height: 1.7; color: var(--text-secondary); }
-.ai-content ul, .ai-content ol { padding-left: 24px; margin-bottom: 10px; }
-.ai-content li { margin-bottom: 4px; color: var(--text-secondary); line-height: 1.6; }
-.ai-content strong { color: var(--text-primary); }
-.ai-content table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-.ai-content th { background: rgba(0,150,136,0.1); padding: 10px 14px; text-align: left; font-weight: 600; border: 1px solid var(--border); }
-.ai-content td { padding: 10px 14px; border: 1px solid var(--border); color: var(--text-secondary); }
+.ai-content {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--text-secondary);
+}
+
+/* ── Headings ── */
+.ai-content .ai-h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 28px 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--primary);
+  letter-spacing: -0.02em;
+}
+.ai-content .ai-h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 24px 0 10px;
+  padding: 8px 0 8px 14px;
+  border-left: 3px solid var(--primary);
+  background: linear-gradient(90deg, rgba(0,150,136,0.06) 0%, transparent 60%);
+  border-radius: 0 8px 8px 0;
+}
+.ai-content .ai-h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 20px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-content .ai-h3::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Horizontal Rule ── */
+.ai-content .ai-hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--border) 20%, var(--border) 80%, transparent 100%);
+  margin: 20px 0;
+}
+
+/* ── Bold & Emphasis ── */
+.ai-content strong { color: var(--text-primary); font-weight: 700; }
+.ai-content em { color: var(--text-secondary); font-style: italic; }
+.ai-content code.ai-code {
+  background: rgba(0,150,136,0.1);
+  color: var(--primary);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.92em;
+  font-family: "Fira Code", "Cascadia Code", monospace;
+}
+
+/* ── Tables ── */
+.ai-content .ai-table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.3);
+}
+.ai-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ai-content th {
+  background: rgba(0, 150, 136, 0.12);
+  color: var(--primary);
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.ai-content td {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  vertical-align: top;
+  line-height: 1.6;
+}
+.ai-content tr:nth-child(even) td {
+  background: rgba(255,255,255,0.015);
+}
+.ai-content tr:last-child td {
+  border-bottom: none;
+}
+.ai-content tr:hover td {
+  background: rgba(0, 150, 136, 0.04);
+}
+
+/* ── Lists ── */
+.ai-content .ai-ol {
+  counter-reset: ai-counter;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 10px 0;
+}
+.ai-content .ai-ol > li {
+  counter-increment: ai-counter;
+  padding: 8px 10px 8px 36px;
+  position: relative;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.ai-content .ai-ol > li::before {
+  content: counter(ai-counter);
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(0, 150, 136, 0.1);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-content .ai-ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 10px 4px;
+}
+.ai-content .ai-ul > li {
+  padding: 6px 10px 6px 22px;
+  position: relative;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.ai-content .ai-ul > li::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 14px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.6;
+}
+.ai-content .ai-ul > li.ai-li-nested {
+  padding-left: 42px;
+}
+.ai-content .ai-ul > li.ai-li-nested::before {
+  left: 28px;
+  width: 5px;
+  height: 5px;
+  background: var(--text-secondary);
+  opacity: 0.4;
+}
+
+/* ── Paragraph Breaks ── */
+.ai-content .ai-para-break {
+  height: 12px;
+}
+
+/* ── Cursor Blink (streaming) ── */
+.ai-cursor::after {
+  content: "▊";
+  animation: blink 0.7s step-end infinite;
+  color: var(--primary);
+  font-weight: 400;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
 
 /* ══════════════════════════════════════════════
    MODAL OVERLAY
@@ -692,11 +870,17 @@ textarea.input-field { resize: vertical; min-height: 100px; }
     backdrop-filter: none !important;
   }
   .ai-content { color: black !important; }
-  .ai-content h1, .ai-content h2, .ai-content h3 { color: #1a1a2e !important; }
-  .ai-content p, .ai-content li { color: #333 !important; }
+  .ai-content .ai-h1, .ai-content .ai-h2, .ai-content .ai-h3 { color: #1a1a2e !important; border-color: #999 !important; }
+  .ai-content .ai-h2 { background: rgba(0,0,0,0.03) !important; }
+  .ai-content .ai-h3::before { background: #333 !important; }
+  .ai-content li { color: #333 !important; }
+  .ai-content .ai-ol > li::before { background: #eee !important; color: #333 !important; }
+  .ai-content .ai-ul > li::before { background: #333 !important; }
+  .ai-content .ai-table-wrap { border-color: #ccc !important; background: transparent !important; }
   .ai-content table { border: 1px solid #999 !important; }
-  .ai-content th { background: #eee !important; color: black !important; }
-  .ai-content td { color: #333 !important; }
+  .ai-content th { background: #eee !important; color: black !important; border-color: #999 !important; }
+  .ai-content td { color: #333 !important; border-color: #ddd !important; }
+  .ai-content .ai-hr { background: #ccc !important; }
   .stat-number { -webkit-text-fill-color: #009688 !important; color: #009688 !important; }
 }
 

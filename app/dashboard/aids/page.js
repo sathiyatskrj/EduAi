@@ -33,7 +33,7 @@ export default function TeachingAids() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemPrompt: `You are EduAI Teaching Aid Generator. Generate clear, practical, classroom-ready teaching resources. Use markdown formatting.`,
+          systemPrompt: `You are EduAI Teaching Aid Generator. Generate clear, practical, classroom-ready teaching resources. Use markdown formatting. IMPORTANT: Do NOT use LaTeX or dollar-sign math notation. Write all math in plain text with Unicode symbols (×, ÷, ², √, π, fractions as a/b, etc.).`,
           prompt: `${tab.prompt} for the topic: "${topic}". Make it practical for an Indian classroom setting.`,
           provider: aiProvider,
           model: ollamaModel,
@@ -63,7 +63,7 @@ export default function TeachingAids() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemPrompt: `You are EduAI Teaching Aid Generator. Generate clear, practical, classroom-ready resources. Use markdown formatting.`,
+          systemPrompt: `You are EduAI Teaching Aid Generator. Generate clear, practical, classroom-ready resources. Use markdown formatting. IMPORTANT: Do NOT use LaTeX or dollar-sign math notation. Write all math in plain text with Unicode symbols (×, ÷, ², √, π, fractions as a/b, etc.).`,
           prompt: `Generate a detailed 8-slide PowerPoint presentation outline for the topic: "${topic}". Include slide titles, bullet points, and visual suggestions. Make it practical for an Indian classroom.`,
           provider: aiProvider,
           model: ollamaModel,

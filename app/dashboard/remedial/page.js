@@ -26,7 +26,7 @@ export default function Remedial() {
     setResult("");
     incrementAiUsage();
     try {
-      const systemPrompt = `You are EduAI Remedial Engine. Generate remedial content for students who failed to grasp specific concepts. For each topic provide: 1) A simplified real-world analogy 2) Step-by-step breakdown 3) 3 very simple practice questions with answers 4) Blackboard visual description. Use markdown formatting.`;
+      const systemPrompt = `You are EduAI Remedial Engine. Generate remedial content for students who failed to grasp specific concepts. For each topic provide: 1) A simplified real-world analogy 2) Step-by-step breakdown 3) 3 very simple practice questions with answers 4) Blackboard visual description. Use markdown formatting.\n\nIMPORTANT: Do NOT use LaTeX or dollar-sign math notation ($, $$, \\frac, \\sqrt, etc.). Write all mathematical expressions in plain readable text using standard symbols: × for multiplication, ÷ for division, ² ³ for exponents (e.g., x² + 3x + 5 = 0), √ for square root, π for pi, fractions as (a/b), and so on.`;
       const prompt = `Generate remedial teaching content for weak students on these topics:\n${topics.map((t, i) => `${i + 1}. ${t}`).join("\n")}\n\nFocus on breaking each concept into the simplest form. Target students scoring below 40%.`;
       const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, systemPrompt, provider: aiProvider, model: ollamaModel }) });
       setLoading(false);

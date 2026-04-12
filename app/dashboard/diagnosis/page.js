@@ -42,7 +42,7 @@ export default function Diagnosis() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemPrompt: "You are EduAI Diagnostic Engine. Analyze the question-wise failure data and generate actionable insights for the teacher. Be specific about what went wrong and what to do next. Keep it to 3-4 paragraphs.",
+          systemPrompt: "You are EduAI Diagnostic Engine. Analyze the question-wise failure data and generate actionable insights for the teacher. Be specific about what went wrong and what to do next. Keep it to 3-4 paragraphs. IMPORTANT: Do NOT use LaTeX or dollar-sign math notation. Write all math in plain text with Unicode symbols (×, ÷, ², √, π, etc.).",
           prompt: `Analyze this class diagnostic data for VII-A Mathematics Unit Test 1:\n\nQuestion-wise failures:\n- Q4 (Multiplying Fractions, Application level): 72% failure — primarily calculation errors\n- Q7 (Algebraic Identities, Understanding): 45% failure — conceptual misunderstanding of (a+b)²\n- Q9 (Word Problems, Analysis): 38% failure — reading comprehension issues\n- Q2 (Linear Equations, Knowledge): 8% failure — careless errors\n\nAt-risk students: Diya Reddy (38%), Kavya Gupta (42%), Om Prakash (33%)\n\nProvide: 1) Root cause analysis 2) Priority action items 3) Recommended teaching strategy changes`,
           provider: aiProvider,
           model: ollamaModel,

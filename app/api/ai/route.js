@@ -44,7 +44,10 @@ async function handleStreamingResponse(provider, safePrompt, safeSystem, model) 
               options: { temperature: 0.2 }
             })
           });
-          if (!res.ok) throw new Error(`Ollama error: ${res.status}`);
+          if (!res.ok) {
+            const errorDetails = await res.text();
+            throw new Error(`Gemini Connection Error (${res.status}): ${errorDetails}`);
+          }
           const reader = res.body.getReader();
           while (true) {
             const { done, value } = await reader.read();
@@ -59,9 +62,8 @@ async function handleStreamingResponse(provider, safePrompt, safeSystem, model) 
             }
           }
         } else if (provider === "gemini-flash-2") {
-          // Gemini 2.0 Flash
-          if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not set in environment");
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${GEMINI_API_KEY}`;
+          // GEMINI STREAM - utilizing 'gemini-3.1-flash-lite-preview'
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:streamGenerateContent?key=${GEMINI_API_KEY}`;
           const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -80,6 +82,7 @@ async function handleStreamingResponse(provider, safePrompt, safeSystem, model) 
           const maxAttempts = 3;
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
              try {
+               // Use gemini-3.1-flash-lite-preview base model
                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:streamGenerateContent?key=${GEMINI_API_KEY}`;
                const res = await fetch(url, {
                  method: "POST",
@@ -106,7 +109,11 @@ async function handleStreamingResponse(provider, safePrompt, safeSystem, model) 
                  continue;
                }
 
-               if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
+               if (!res.ok) {
+                 const errorText = await res.text();
+                 throw new Error(`Gemini error (${res.status}): ${errorText}`);
+               }
+               
                await streamGeminiResponse(res.body, controller, encoder, decoder);
                return; // Success
              } catch (e) {

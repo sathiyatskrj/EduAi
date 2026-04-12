@@ -7,14 +7,14 @@ import { parseMarkdown } from "@/app/utils/markdown";
 import { Copy, FileText, Printer, RotateCcw, Clock, BookOpen } from "lucide-react";
 
 export default function LessonPlanner() {
-  const [form, setForm] = useState({ cls: "VII", subject: "Mathematics", lesson: "", topic: "", duration: "40", medium: "English", difficulty: "Standard", instructions: "" });
+  const [form, setForm] = useState({ cls: "VII", subject: "Mathematics", lesson: "", topic: "", duration: "40", medium: "English", difficulty: "Standard", instructions: "", bloomLevel: "Understanding" });
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [planMode, setPlanMode] = useState("forward");
   const [retroNotes, setRetroNotes] = useState("");
   const [versions, setVersions] = useState([]);
-  const { aiProvider, ollamaModel, incrementAiUsage, showToast } = useApp();
+  const { aiProvider, ollamaModel, incrementAiUsage, showToast, savedLessons, saveLesson } = useApp();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -27,8 +27,8 @@ export default function LessonPlanner() {
     setResult("");
     incrementAiUsage();
     try {
-      const systemPrompt = `You are EduAI, an expert Indian school teacher assistant. Generate detailed lesson plans in structured format for CBSE/State Board schools. Use markdown with proper headings, tables, and numbered lists. Include all sections: Preliminary Info, Instructional Objectives (SIOs), Previous Knowledge, Teaching Aids, Entry Behaviour, Announcement of Topic, Teaching Steps table (Teaching Point | Learning Experience | Behavioural Objective | Teaching Aid | Evaluation), Blackboard Work, Evaluation Questions, Homework, and Summary.`;
-      const prompt = `Generate a complete lesson plan:\n- Class: ${form.cls}\n- Subject: ${form.subject}\n- Lesson/Chapter: ${form.lesson}\n- Topic: ${form.topic}\n- Duration: ${form.duration} minutes\n- Teaching Medium: ${form.medium}\n- Difficulty: ${form.difficulty}\n${form.instructions ? `- Special Instructions: ${form.instructions}` : ""}\n\nProvide a comprehensive, detailed lesson plan in the exact B.Ed notebook format.`;
+      const systemPrompt = `You are EduAI, an expert Indian school teacher assistant. Generate detailed lesson plans in structured format for CBSE/State Board schools. Use markdown with proper headings, tables, and numbered lists. Include all sections: Preliminary Info, Instructional Objectives (SIOs), Previous Knowledge, Teaching Aids, Entry Behaviour, Announcement of Topic, Teaching Steps table (Teaching Point | Learning Experience | Behavioural Objective | Teaching Aid | Evaluation), Blackboard Work, Evaluation Questions, Homework, and Summary.\n\nIMPORTANT: Do NOT use LaTeX or dollar-sign math notation ($, $$, \\frac, \\sqrt, etc.). Write all mathematical expressions in plain readable text using standard symbols: × for multiplication, ÷ for division, ² ³ for exponents (e.g., x² + 3x + 5 = 0), √ for square root, π for pi, fractions as (a/b), and so on.`;
+      const prompt = `Generate a complete lesson plan:\n- Class: ${form.cls}\n- Subject: ${form.subject}\n- Lesson/Chapter: ${form.lesson}\n- Topic: ${form.topic}\n- Duration: ${form.duration} minutes\n- Primary Cognitive Focus (Bloom's taxonomy): ${form.bloomLevel}\n- Difficulty: ${form.difficulty}\n${form.instructions ? `- Special Instructions: ${form.instructions}` : ""}\n\nProvide a comprehensive, detailed lesson plan in the exact B.Ed notebook format. Ensure SIOs match the Cognitive Focus.`;
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,7 +56,7 @@ export default function LessonPlanner() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemPrompt: "You are EduAI. Convert rough teaching notes into a formal B.Ed lesson plan format with all standard sections.",
+          systemPrompt: "You are EduAI. Convert rough teaching notes into a formal B.Ed lesson plan format with all standard sections. IMPORTANT: Do NOT use LaTeX or dollar-sign math notation. Write all math in plain text with Unicode symbols (×, ÷, ², √, π, etc.).",
           prompt: `Convert the following rough teaching notes into a formal lesson plan for Class ${form.cls}, Subject ${form.subject}, Topic: ${form.topic}:\n\n${retroNotes}`,
           provider: aiProvider,
           model: ollamaModel
@@ -83,6 +83,9 @@ export default function LessonPlanner() {
         <p style={{ color: "var(--text-secondary)" }}>Generate complete NCERT-aligned lesson plans in 60 seconds.</p>
       </div>
 
+      <div className="lesson-planner-layout" style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+        
+      <div style={{ flex: "1 1 600px", minWidth: 0 }}>
       {/* Mode Tabs */}
       <div style={{ display: "flex", gap: 8, background: "rgba(255,255,255,0.04)", padding: 4, borderRadius: 12, marginBottom: 22, maxWidth: 460 }}>
         {[["forward", "📝 Forward Plan", "var(--primary)"], ["retro", "🔄 Retrospective", "var(--accent)"]].map(([m, label, color]) => (
@@ -144,7 +147,13 @@ export default function LessonPlanner() {
                 {["Mathematics","Science","Social Studies","English","Hindi"].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div style={{ gridColumn: "1 / -1" }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Bloom's Taxonomy Focus</label>
+              <select name="bloomLevel" value={form.bloomLevel} onChange={handleChange} className="input-field" style={{ padding: 10 }}>
+                {["Knowledge", "Understanding", "Application", "Analysis", "Synthesis", "Evaluation"].map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </div>
+            <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, display: "block" }}>Chapter Name</label>
               <input name="lesson" value={form.lesson} onChange={handleChange} className="input-field" placeholder="e.g., Algebraic Expressions" style={{ padding: 10 }} />
             </div>
@@ -187,6 +196,9 @@ export default function LessonPlanner() {
                     <button className="btn-secondary" style={{ padding: "6px 12px", fontSize: 12 }} onClick={() => window.print()}>
                       <Printer size={12} /> Print
                     </button>
+                    <button className="btn-secondary" style={{ padding: "6px 12px", fontSize: 12 }} onClick={() => saveLesson({ topic: form.topic, content: result })}>
+                      💾 Save to Library
+                    </button>
                     <button className="btn-primary" style={{ padding: "6px 12px", fontSize: 12 }} onClick={() => exportToPDF("lesson-plan.pdf", "EduAI Lesson Plan", result)}>
                       <FileText size={12} /> PDF
                     </button>
@@ -219,6 +231,33 @@ export default function LessonPlanner() {
           </div>
         </div>
       )}
+      </div>
+
+      {/* Library Sidebar */}
+      <div className="card no-print" style={{ flex: "1 1 300px", maxWidth: "100%", position: "sticky", top: 20 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <BookOpen size={16} /> Saved Library
+        </h2>
+        {savedLessons?.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {savedLessons.map(sl => (
+              <div key={sl.id} onClick={() => { setStep(2); setResult(sl.content); }} style={{
+                padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 8,
+                border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.2s"
+              }} className="hover-lift">
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{sl.topic}</div>
+                <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>{sl.date}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ padding: 20, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>
+            No saved plans yet. Generate and save a plan to see it here.
+          </div>
+        )}
+      </div>
+      
+      </div>
     </div>
   );
 }

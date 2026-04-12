@@ -40,6 +40,9 @@ export function AppProvider({ children }) {
   // Notification count (alerts shown on dashboard)
   const [notificationCount] = useState(5);
 
+  // Lesson Persistence
+  const [savedLessons, setSavedLessons] = useState([]);
+
   // ── Load from localStorage ──────────────────────────────
   useEffect(() => {
     // Mode
@@ -82,6 +85,12 @@ export function AppProvider({ children }) {
       setAiUsageCount(0);
     }
     setAiUsageDate(today);
+
+    // Saved Lessons
+    const savedPlans = localStorage.getItem("eduai-saved-lessons");
+    if (savedPlans) {
+      try { setSavedLessons(JSON.parse(savedPlans)); } catch {}
+    }
 
     // Offline
     const handleOnline = () => setOffline(false);
@@ -199,6 +208,21 @@ export function AppProvider({ children }) {
     setTimeout(() => window.location.reload(), 1000);
   };
 
+  // ── Lesson Persistence ──────────────────────────────────
+  const saveLesson = (lesson) => {
+    const updated = [{ ...lesson, id: Date.now(), date: new Date().toLocaleDateString() }, ...savedLessons];
+    setSavedLessons(updated);
+    localStorage.setItem("eduai-saved-lessons", JSON.stringify(updated));
+    showToast("Lesson plan saved to library!");
+  };
+
+  const deleteLesson = (id) => {
+    const updated = savedLessons.filter(l => l.id !== id);
+    setSavedLessons(updated);
+    localStorage.setItem("eduai-saved-lessons", JSON.stringify(updated));
+    showToast("Lesson deleted from library");
+  };
+
   return (
     <AppContext.Provider value={{
       mode, toggleMode,
@@ -214,6 +238,7 @@ export function AppProvider({ children }) {
       notificationCount,
       showToast,
       clearAllData,
+      savedLessons, saveLesson, deleteLesson,
     }}>
       {/* Animated Mesh Background */}
       <div className="mesh-bg" aria-hidden="true">
