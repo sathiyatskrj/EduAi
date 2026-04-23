@@ -6,7 +6,7 @@ import { useApp } from "./AppContext";
 import {
   Home, BookOpen, FlaskConical, BarChart2, Users,
   Palette, PenLine, Search, Pill, Settings, FolderOpen,
-  ChevronRight, Zap, Sparkles
+  ChevronRight, Zap, Sparkles, Brain, FileText
 } from "lucide-react";
 
 const CORE_NAV = [
@@ -21,6 +21,8 @@ const MORE_NAV = [
   { href: "/dashboard/aids", icon: Palette, label: "Teaching Aids" },
   { href: "/dashboard/marks", icon: PenLine, label: "Marks Entry" },
   { href: "/dashboard/diagnosis", icon: Search, label: "Diagnosis" },
+  { href: "/dashboard/psychoanalysis", icon: Brain, label: "Psychoanalysis" },
+  { href: "/dashboard/blueprint", icon: FileText, label: "Blueprint Maker" },
   { href: "/dashboard/remedial", icon: Pill, label: "Remedial" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
